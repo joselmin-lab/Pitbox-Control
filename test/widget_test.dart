@@ -1,0 +1,16 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:pitbox_control/main.dart';
+
+void main() {
+  testWidgets('muestra el dashboard inicial y el branding principal', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: PitboxControlApp()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pitbox Control'), findsOneWidget);
+    expect(find.text('Dashboard general'), findsOneWidget);
+    expect(find.text('Vehículos en proceso'), findsOneWidget);
+    expect(find.text('Nueva proforma'), findsOneWidget);
+  });
+}

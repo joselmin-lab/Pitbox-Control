@@ -1,0 +1,33 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+build/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# macOS/Linux/Windows
+.DS_Store
+Thumbs.db
+
+# Android
+**/android/**/gradle-wrapper.jar
+**/android/.gradle/
+android/local.properties
+
+# iOS
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/xcuserdata/
+**/ios/**/*.xccheckout
+**/ios/**/*.moved-aside
+**/ios/**/DerivedData/
+**/ios/**/.symlinks/
+**/ios/**/Pods/

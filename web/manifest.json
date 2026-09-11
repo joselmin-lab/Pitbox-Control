@@ -1,0 +1,10 @@
+{
+  "name": "Pitbox Control",
+  "short_name": "Pitbox",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F5F5F5",
+  "theme_color": "#D32F2F",
+  "description": "Interfaz base modular para taller mecánico.",
+  "orientation": "portrait-primary"
+}
