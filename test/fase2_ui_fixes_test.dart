@@ -297,6 +297,53 @@ void main() {
     expect(find.text('Debes seleccionar un cliente.'), findsOneWidget);
     expect(vehiculoRepository.createdVehiculo, isNull);
   });
+
+  testWidgets('formulario de vehículo no autoasocia nombres completos duplicados sin selección', (
+    tester,
+  ) async {
+    final clienteRepository = _TestClienteRepository([
+      Cliente(
+        id: 'cli-ana-1',
+        nombre: 'Ana',
+        apellido: 'Rojas',
+        telefono: '70012345',
+        fechaRegistro: DateTime(2026, 1, 10),
+      ),
+      Cliente(
+        id: 'cli-ana-2',
+        nombre: 'Ana',
+        apellido: 'Rojas',
+        telefono: '71111111',
+        fechaRegistro: DateTime(2026, 2, 10),
+      ),
+    ]);
+    final vehiculoRepository = _RecordingVehiculoRepository();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clienteRepositoryProvider.overrideWithValue(clienteRepository),
+          vehiculoRepositoryProvider.overrideWithValue(vehiculoRepository),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: VehiculoFormScreen()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'Ana Rojas');
+    await tester.enterText(find.byType(TextFormField).at(1), 'DUP-001');
+    await tester.enterText(find.byType(TextFormField).at(2), 'Toyota');
+    await tester.enterText(find.byType(TextFormField).at(3), 'Etios');
+    await tester.enterText(find.byType(TextFormField).at(4), '2021');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Debes seleccionar un cliente.'), findsOneWidget);
+    expect(vehiculoRepository.createdVehiculo, isNull);
+  });
 }
 
 class _TestClienteRepository implements ClienteRepository {

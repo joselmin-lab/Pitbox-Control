@@ -421,12 +421,16 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     if (normalizedValue.isEmpty) {
       return null;
     }
+    Cliente? match;
     for (final cliente in clientes) {
       if (_normalizeClienteValue(cliente.nombreCompleto) == normalizedValue) {
-        return cliente;
+        if (match != null) {
+          return null;
+        }
+        match = cliente;
       }
     }
-    return null;
+    return match;
   }
 
   Cliente? _findClienteById(List<Cliente> clientes, String? clienteId) {
