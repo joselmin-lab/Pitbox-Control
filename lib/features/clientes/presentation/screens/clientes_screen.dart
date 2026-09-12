@@ -8,13 +8,34 @@ import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_table.dart';
 import '../providers/clientes_provider.dart';
 
-class ClientesScreen extends ConsumerWidget {
+class ClientesScreen extends ConsumerStatefulWidget {
   const ClientesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ClientesScreen> createState() => _ClientesScreenState();
+}
+
+class _ClientesScreenState extends ConsumerState<ClientesScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final clientesAsync = ref.watch(clientesProvider);
     final clientes = ref.watch(clientesFiltradosProvider);
+    final query = ref.watch(clientesSearchQueryProvider);
+
+    if (_searchController.text != query) {
+      _searchController.value = TextEditingValue(
+        text: query,
+        selection: TextSelection.collapsed(offset: query.length),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,6 +57,7 @@ class ClientesScreen extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         TextField(
+          controller: _searchController,
           decoration: const InputDecoration(
             labelText: 'Buscar cliente',
             prefixIcon: Icon(Icons.search_rounded),

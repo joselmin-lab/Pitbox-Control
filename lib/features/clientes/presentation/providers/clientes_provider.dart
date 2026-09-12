@@ -34,6 +34,8 @@ final clienteByIdProvider = Provider.family<Cliente?, String>((ref, clienteId) {
 });
 
 class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
+  Future<void> _deleteQueue = Future<void>.value();
+
   @override
   Future<List<Cliente>> build() async {
     return ref.read(clienteRepositoryProvider).getAll();
@@ -88,6 +90,12 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
   }
 
   Future<void> delete(String clienteId) async {
+    final operation = _deleteQueue.then((_) => _deleteInternal(clienteId));
+    _deleteQueue = operation.catchError((_) {});
+    await operation;
+  }
+
+  Future<void> _deleteInternal(String clienteId) async {
     final clienteRepository = ref.read(clienteRepositoryProvider);
     final vehiculoRepository = ref.read(vehiculoRepositoryProvider);
 

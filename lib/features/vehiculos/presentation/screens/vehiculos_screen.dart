@@ -9,17 +9,38 @@ import '../../../../shared/widgets/app_table.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
 import '../providers/vehiculos_provider.dart';
 
-class VehiculosScreen extends ConsumerWidget {
+class VehiculosScreen extends ConsumerStatefulWidget {
   const VehiculosScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VehiculosScreen> createState() => _VehiculosScreenState();
+}
+
+class _VehiculosScreenState extends ConsumerState<VehiculosScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final vehiculosAsync = ref.watch(vehiculosProvider);
     final vehiculos = ref.watch(vehiculosFiltradosProvider);
     final clientes = ref.watch(clientesProvider).maybeWhen(
           data: (value) => value,
           orElse: () => const [],
         );
+    final query = ref.watch(vehiculosSearchQueryProvider);
+
+    if (_searchController.text != query) {
+      _searchController.value = TextEditingValue(
+        text: query,
+        selection: TextSelection.collapsed(offset: query.length),
+      );
+    }
 
     final clientesById = {
       for (final cliente in clientes) cliente.id: cliente.nombreCompleto,
@@ -45,6 +66,7 @@ class VehiculosScreen extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         TextField(
+          controller: _searchController,
           decoration: const InputDecoration(
             labelText: 'Buscar vehículo',
             prefixIcon: Icon(Icons.search_rounded),
