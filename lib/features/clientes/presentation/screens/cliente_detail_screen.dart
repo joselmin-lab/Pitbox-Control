@@ -132,6 +132,7 @@ class ClienteDetailScreen extends ConsumerWidget {
                   return const Text('Este cliente aún no tiene vehículos registrados.');
                 }
                 return AppDataTable(
+                  showCheckboxColumn: false,
                   columns: const [
                     DataColumn(label: Text('Placa')),
                     DataColumn(label: Text('Marca')),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../clientes/domain/models/cliente.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
 import '../providers/vehiculos_provider.dart';
 
@@ -24,6 +25,8 @@ class VehiculoFormScreen extends ConsumerStatefulWidget {
 
 class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _clienteController = TextEditingController();
+  final _clienteFocusNode = FocusNode();
   final _placaController = TextEditingController();
   final _marcaController = TextEditingController();
   final _modeloController = TextEditingController();
@@ -34,6 +37,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   String? _selectedClienteId;
   bool _initialized = false;
   bool _saving = false;
+  bool _showAllClienteSuggestions = false;
 
   @override
   void didUpdateWidget(covariant VehiculoFormScreen oldWidget) {
@@ -45,6 +49,8 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
 
   @override
   void dispose() {
+    _clienteController.dispose();
+    _clienteFocusNode.dispose();
     _placaController.dispose();
     _marcaController.dispose();
     _modeloController.dispose();
@@ -62,7 +68,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     final clientesAsync = ref.watch(clientesProvider);
     final clientes = clientesAsync.maybeWhen(
       data: (value) => value,
-      orElse: () => const [],
+      orElse: () => const <Cliente>[],
     );
 
     if (clientesAsync.isLoading) {
@@ -107,12 +113,19 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
       _colorController.text = vehiculo?.color ?? '';
       _kilometrajeController.text = vehiculo?.kilometraje?.toString() ?? '';
       _selectedClienteId = vehiculo?.clienteId ?? widget.clienteId;
+      _syncClienteField(clientes);
       _initialized = true;
     }
 
     final isEdit = vehiculo != null;
-    final clienteIds = clientes.map((item) => item.id).toSet();
-    final selectedClienteId = clienteIds.contains(_selectedClienteId) ? _selectedClienteId : null;
+    final selectedCliente = _findClienteById(clientes, _selectedClienteId);
+
+    if (selectedCliente != null &&
+        !_clienteFocusNode.hasFocus &&
+        _normalizeClienteValue(_clienteController.text) !=
+            _normalizeClienteValue(selectedCliente.nombreCompleto)) {
+      _setClienteFieldText(selectedCliente.nombreCompleto);
+    }
 
     return SingleChildScrollView(
       child: AppSectionCard(
@@ -122,20 +135,126 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DropdownButtonFormField<String>(
-                value: selectedClienteId,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Cliente asociado *'),
-                items: [
-                  for (final cliente in clientes)
-                    DropdownMenuItem(value: cliente.id, child: Text(cliente.nombreCompleto)),
-                ],
-                onChanged: (value) => setState(() => _selectedClienteId = value),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Debes seleccionar un cliente.';
-                  }
-                  return null;
+              LayoutBuilder(
+                builder: (context, fieldConstraints) {
+                  return RawAutocomplete<Cliente>(
+                    displayStringForOption: (cliente) => cliente.nombreCompleto,
+                    textEditingController: _clienteController,
+                    focusNode: _clienteFocusNode,
+                    optionsBuilder: (textEditingValue) {
+                      final query = _normalizeClienteValue(textEditingValue.text);
+                      if (_showAllClienteSuggestions) {
+                        return clientes;
+                      }
+                      if (query.isNotEmpty) {
+                        return clientes.where((cliente) {
+                          return _normalizeClienteValue(cliente.nombreCompleto).contains(query);
+                        });
+                      }
+                      return const <Cliente>[];
+                    },
+                    onSelected: (cliente) {
+                      setState(() {
+                        _selectedClienteId = cliente.id;
+                        _showAllClienteSuggestions = false;
+                      });
+                      _setClienteFieldText(cliente.nombreCompleto);
+                    },
+                    fieldViewBuilder: (context, textEditingController, focusNode, _) {
+                      return TextFormField(
+                        controller: textEditingController,
+                        focusNode: focusNode,
+                        decoration: InputDecoration(
+                          labelText: 'Cliente asociado *',
+                          hintText: 'Buscar cliente por nombre',
+                          helperText: 'Busca por nombre y selecciona un cliente de la lista.',
+                          suffixIcon: IconButton(
+                            tooltip: 'Mostrar clientes',
+                            icon: const Icon(Icons.arrow_drop_down_rounded),
+                            onPressed: () {
+                              setState(() => _showAllClienteSuggestions = true);
+                              _clienteFocusNode.requestFocus();
+                              _clienteController.value = TextEditingValue(
+                                text: _clienteController.text,
+                                selection: TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: _clienteController.text.length,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        onChanged: (value) {
+                          if (_showAllClienteSuggestions) {
+                            setState(() => _showAllClienteSuggestions = false);
+                          }
+                          final currentSelectedCliente = _findClienteById(clientes, _selectedClienteId);
+                          final normalizedValue = _normalizeClienteValue(value);
+                          final normalizedSelectedName =
+                              _normalizeClienteValue(currentSelectedCliente?.nombreCompleto ?? '');
+                          final stillMatchesSelected =
+                              _selectedClienteId != null && normalizedValue == normalizedSelectedName;
+
+                          if (stillMatchesSelected) {
+                            return;
+                          }
+                          if (_selectedClienteId != null) {
+                            setState(() => _selectedClienteId = null);
+                          }
+                        },
+                        onFieldSubmitted: (_) {
+                          _syncSelectedClienteWithField(clientes);
+                        },
+                        validator: (_) {
+                          if (_selectedClienteId == null || _selectedClienteId!.isEmpty) {
+                            return 'Debes seleccionar un cliente.';
+                          }
+                          return null;
+                        },
+                      );
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Semantics(
+                          label: 'Sugerencias de clientes',
+                          child: Material(
+                            elevation: 4,
+                            child: SizedBox(
+                              width: fieldConstraints.maxWidth,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 240),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: options.length,
+                                  itemBuilder: (context, index) {
+                                    final cliente = options.elementAt(index);
+                                    final isHighlighted =
+                                        AutocompleteHighlightedOption.of(context) == index;
+                                    return Semantics(
+                                      button: true,
+                                      label: 'Seleccionar cliente ${cliente.nombreCompleto}',
+                                      child: Material(
+                                        color: isHighlighted
+                                            ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                            : Colors.transparent,
+                                        child: ListTile(
+                                          selected: isHighlighted,
+                                          title: Text(cliente.nombreCompleto),
+                                          onTap: () => onSelected(cliente),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -218,6 +337,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     onPressed: _saving
                         ? null
                         : () async {
+                            _syncSelectedClienteWithField(clientes);
                             if (!_formKey.currentState!.validate()) {
                               return;
                             }
@@ -280,5 +400,93 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
         ),
       ),
     );
+  }
+
+  Cliente? _findClienteById(List<Cliente> clientes, String? clienteId) {
+    if (clienteId == null) {
+      return null;
+    }
+    for (final cliente in clientes) {
+      if (cliente.id == clienteId) {
+        return cliente;
+      }
+    }
+    return null;
+  }
+
+  void _setClienteFieldText(String value) {
+    _clienteController.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+  }
+
+  void _syncSelectedClienteWithField(List<Cliente> clientes) {
+    final selectedCliente = _findClienteById(clientes, _selectedClienteId);
+    final hadSelectedClienteId = _selectedClienteId != null;
+    final textMatchesSelection = selectedCliente != null &&
+        _normalizeClienteValue(_clienteController.text) ==
+            _normalizeClienteValue(selectedCliente.nombreCompleto);
+
+    setState(() {
+      _showAllClienteSuggestions = false;
+      if (!textMatchesSelection) {
+        _selectedClienteId = null;
+      }
+    });
+    if (textMatchesSelection && selectedCliente != null) {
+      _setClienteFieldText(selectedCliente.nombreCompleto);
+    } else if (selectedCliente == null && hadSelectedClienteId) {
+      _setClienteFieldText('');
+    }
+  }
+
+  void _syncClienteField(List<Cliente> clientes) {
+    final selectedCliente = _findClienteById(clientes, _selectedClienteId);
+    if (selectedCliente == null) {
+      if (_selectedClienteId != null) {
+        _selectedClienteId = null;
+      }
+      _setClienteFieldText('');
+      return;
+    }
+    _setClienteFieldText(selectedCliente.nombreCompleto);
+  }
+
+  String _normalizeClienteValue(String value) {
+    const replacements = {
+      'á': 'a',
+      'à': 'a',
+      'ä': 'a',
+      'â': 'a',
+      'é': 'e',
+      'è': 'e',
+      'ë': 'e',
+      'ê': 'e',
+      'í': 'i',
+      'ì': 'i',
+      'ï': 'i',
+      'î': 'i',
+      'ó': 'o',
+      'ò': 'o',
+      'ö': 'o',
+      'ô': 'o',
+      'ú': 'u',
+      'ù': 'u',
+      'ü': 'u',
+      'û': 'u',
+      'ç': 'c',
+      'ñ': 'n',
+    };
+
+    final normalized = StringBuffer();
+    for (final rune in value.trim().toLowerCase().runes) {
+      if (rune >= 0x0300 && rune <= 0x036F) {
+        continue;
+      }
+      final character = String.fromCharCode(rune);
+      normalized.write(replacements[character] ?? character);
+    }
+    return normalized.toString();
   }
 }
