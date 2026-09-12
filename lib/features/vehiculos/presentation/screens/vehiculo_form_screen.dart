@@ -165,9 +165,10 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                         ),
                         onChanged: (value) {
                           final exactCliente = _findClienteByExactName(clientes, value);
+                          final currentSelectedCliente = _findClienteById(clientes, _selectedClienteId);
                           final normalizedValue = _normalizeClienteValue(value);
                           final normalizedSelectedName =
-                              _normalizeClienteValue(selectedCliente?.nombreCompleto ?? '');
+                              _normalizeClienteValue(currentSelectedCliente?.nombreCompleto ?? '');
                           final stillMatchesSelected =
                               _selectedClienteId != null && normalizedValue == normalizedSelectedName;
 
