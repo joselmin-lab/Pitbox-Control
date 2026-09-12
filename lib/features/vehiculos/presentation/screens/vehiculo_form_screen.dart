@@ -167,7 +167,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                         decoration: InputDecoration(
                           labelText: 'Cliente asociado *',
                           hintText: 'Buscar cliente por nombre',
-                          helperText: 'Selecciona un cliente de la lista o escribe el nombre completo.',
+                          helperText: 'Busca por nombre y selecciona un cliente de la lista.',
                           suffixIcon: IconButton(
                             tooltip: 'Mostrar clientes',
                             icon: const Icon(Icons.arrow_drop_down_rounded),
