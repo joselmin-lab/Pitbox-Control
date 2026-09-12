@@ -162,6 +162,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Cliente asociado *',
                           hintText: 'Buscar cliente por nombre',
+                          helperText: 'Selecciona un cliente de la lista o escribe el nombre completo.',
                         ),
                         onChanged: (value) {
                           final exactCliente = _findClienteByExactName(clientes, value);
@@ -188,10 +189,10 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                           onFieldSubmitted();
                         },
                         validator: (_) {
-                          final matchedCliente =
-                              _findClienteSelectionMatch(clientes, textEditingController.text);
+                          final exactCliente =
+                              _findClienteByExactName(clientes, textEditingController.text);
                           if ((_selectedClienteId == null || _selectedClienteId!.isEmpty) &&
-                              matchedCliente == null) {
+                              exactCliente == null) {
                             return 'Debes seleccionar un cliente.';
                           }
                           return null;
@@ -392,27 +393,6 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     return null;
   }
 
-  Cliente? _findClienteSelectionMatch(List<Cliente> clientes, String value) {
-    final exactCliente = _findClienteByExactName(clientes, value);
-    if (exactCliente != null) {
-      return exactCliente;
-    }
-
-    final normalizedValue = _normalizeClienteValue(value);
-    if (normalizedValue.isEmpty) {
-      return null;
-    }
-
-    final matches = clientes.where((cliente) {
-      return _normalizeClienteValue(cliente.nombreCompleto).contains(normalizedValue);
-    }).toList(growable: false);
-
-    if (matches.length == 1) {
-      return matches.single;
-    }
-    return null;
-  }
-
   Cliente? _findClienteById(List<Cliente> clientes, String? clienteId) {
     if (clienteId == null) {
       return null;
@@ -426,14 +406,13 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   }
 
   void _resolveClienteSelection(List<Cliente> clientes) {
-    final matchedCliente = _findClienteSelectionMatch(clientes, _clienteController.text);
-    if (matchedCliente == null) {
+    final exactCliente = _findClienteByExactName(clientes, _clienteController.text);
+    if (exactCliente == null) {
       _selectedClienteId = null;
-      _setClienteFieldText('');
       return;
     }
-    _selectedClienteId = matchedCliente.id;
-    _setClienteFieldText(matchedCliente.nombreCompleto);
+    _selectedClienteId = exactCliente.id;
+    _setClienteFieldText(exactCliente.nombreCompleto);
   }
 
   void _setClienteFieldText(String value) {

@@ -166,7 +166,7 @@ void main() {
     expect(vehiculoRepository.createdVehiculo, isNull);
   });
 
-  testWidgets('formulario de vehículo acepta coincidencia única al guardar sin tocar sugerencia', (
+  testWidgets('formulario de vehículo acepta nombre completo sin tocar sugerencia', (
     tester,
   ) async {
     final clienteRepository = _TestClienteRepository([
@@ -211,7 +211,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField).first, 'Ana');
+    await tester.enterText(find.byType(TextFormField).first, 'Ana Rojas');
     await tester.enterText(find.byType(TextFormField).at(1), 'ABC-999');
     await tester.enterText(find.byType(TextFormField).at(2), 'Kia');
     await tester.enterText(find.byType(TextFormField).at(3), 'Rio');
