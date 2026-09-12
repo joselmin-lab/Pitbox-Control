@@ -12,6 +12,8 @@ void main() {
     expect(find.text('Dashboard general'), findsOneWidget);
     expect(find.text('Total clientes'), findsOneWidget);
     expect(find.text('Total vehículos'), findsOneWidget);
+    expect(find.text('4'), findsWidgets);
+    expect(find.text('5'), findsWidgets);
     expect(find.text('Nueva proforma'), findsOneWidget);
   });
 }

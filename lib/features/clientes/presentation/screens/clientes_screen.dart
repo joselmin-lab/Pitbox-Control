@@ -37,6 +37,7 @@ class ClientesScreen extends ConsumerWidget {
         const SizedBox(height: AppSpacing.md),
         TextField(
           decoration: const InputDecoration(
+            labelText: 'Buscar cliente',
             prefixIcon: Icon(Icons.search_rounded),
             hintText: 'Buscar por nombre o teléfono',
           ),
