@@ -134,94 +134,102 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              RawAutocomplete<Cliente>(
-                displayStringForOption: (cliente) => cliente.nombreCompleto,
-                textEditingController: _clienteController,
-                focusNode: _clienteFocusNode,
-                optionsBuilder: (textEditingValue) {
-                  final query = textEditingValue.text.trim().toLowerCase();
-                  if (query.isEmpty) {
-                    return clientes;
-                  }
-                  return clientes.where((cliente) {
-                    return cliente.nombreCompleto.toLowerCase().contains(query);
-                  });
-                },
-                onSelected: (cliente) {
-                  setState(() {
-                    _selectedClienteId = cliente.id;
-                  });
-                  _setClienteFieldText(cliente.nombreCompleto);
-                },
-                fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                  return TextFormField(
-                    controller: textEditingController,
-                    focusNode: focusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Cliente asociado *',
-                      hintText: 'Buscar cliente por nombre',
-                    ),
-                    onChanged: (value) {
-                      final exactCliente = _findClienteByExactName(clientes, value);
-                      final normalizedValue = _normalizeClienteValue(value);
-                      final normalizedSelectedName =
-                          _normalizeClienteValue(selectedCliente?.nombreCompleto ?? '');
-                      final stillMatchesSelected =
-                          _selectedClienteId != null && normalizedValue == normalizedSelectedName;
+              LayoutBuilder(
+                builder: (context, fieldConstraints) {
+                  return RawAutocomplete<Cliente>(
+                    displayStringForOption: (cliente) => cliente.nombreCompleto,
+                    textEditingController: _clienteController,
+                    focusNode: _clienteFocusNode,
+                    optionsBuilder: (textEditingValue) {
+                      final query = textEditingValue.text.trim().toLowerCase();
+                      if (query.isEmpty) {
+                        return clientes;
+                      }
+                      return clientes.where((cliente) {
+                        return cliente.nombreCompleto.toLowerCase().contains(query);
+                      });
+                    },
+                    onSelected: (cliente) {
+                      setState(() {
+                        _selectedClienteId = cliente.id;
+                      });
+                      _setClienteFieldText(cliente.nombreCompleto);
+                    },
+                    fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                      return TextFormField(
+                        controller: textEditingController,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Cliente asociado *',
+                          hintText: 'Buscar cliente por nombre',
+                        ),
+                        onChanged: (value) {
+                          final exactCliente = _findClienteByExactName(clientes, value);
+                          final normalizedValue = _normalizeClienteValue(value);
+                          final normalizedSelectedName =
+                              _normalizeClienteValue(selectedCliente?.nombreCompleto ?? '');
+                          final stillMatchesSelected =
+                              _selectedClienteId != null && normalizedValue == normalizedSelectedName;
 
-                      if (stillMatchesSelected) {
-                        return;
-                      }
-                      if (exactCliente != null && exactCliente.id != _selectedClienteId) {
-                        setState(() => _selectedClienteId = exactCliente.id);
-                        return;
-                      }
-                      if (exactCliente == null && _selectedClienteId != null) {
-                        setState(() => _selectedClienteId = null);
-                      }
+                          if (stillMatchesSelected) {
+                            return;
+                          }
+                          if (exactCliente != null && exactCliente.id != _selectedClienteId) {
+                            setState(() => _selectedClienteId = exactCliente.id);
+                            return;
+                          }
+                          if (exactCliente == null && _selectedClienteId != null) {
+                            setState(() => _selectedClienteId = null);
+                          }
+                        },
+                        onFieldSubmitted: (_) {
+                          _resolveClienteSelection(clientes);
+                          onFieldSubmitted();
+                        },
+                        validator: (_) {
+                          final exactCliente =
+                              _findClienteByExactName(clientes, textEditingController.text);
+                          if ((_selectedClienteId == null || _selectedClienteId!.isEmpty) &&
+                              exactCliente == null) {
+                            return 'Debes seleccionar un cliente.';
+                          }
+                          return null;
+                        },
+                      );
                     },
-                    onFieldSubmitted: (_) {
-                      _resolveClienteSelection(clientes);
-                      onFieldSubmitted();
-                    },
-                    validator: (_) {
-                      final exactCliente = _findClienteByExactName(clientes, textEditingController.text);
-                      if ((_selectedClienteId == null || _selectedClienteId!.isEmpty) &&
-                          exactCliente == null) {
-                        return 'Debes seleccionar un cliente.';
-                      }
-                      return null;
-                    },
-                  );
-                },
-                optionsViewBuilder: (context, onSelected, options) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Semantics(
-                      label: 'Sugerencias de clientes',
-                      child: Material(
-                        elevation: 4,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 240, minWidth: 320),
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            itemCount: options.length,
-                            itemBuilder: (context, index) {
-                              final cliente = options.elementAt(index);
-                              return Semantics(
-                                button: true,
-                                label: 'Seleccionar cliente ${cliente.nombreCompleto}',
-                                child: ListTile(
-                                  title: Text(cliente.nombreCompleto),
-                                  onTap: () => onSelected(cliente),
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Semantics(
+                          label: 'Sugerencias de clientes',
+                          child: Material(
+                            elevation: 4,
+                            child: SizedBox(
+                              width: fieldConstraints.maxWidth,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 240),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: options.length,
+                                  itemBuilder: (context, index) {
+                                    final cliente = options.elementAt(index);
+                                    return Semantics(
+                                      button: true,
+                                      label: 'Seleccionar cliente ${cliente.nombreCompleto}',
+                                      child: ListTile(
+                                        title: Text(cliente.nombreCompleto),
+                                        onTap: () => onSelected(cliente),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -398,6 +406,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   void _resolveClienteSelection(List<Cliente> clientes) {
     final exactCliente = _findClienteByExactName(clientes, _clienteController.text);
     if (exactCliente == null) {
+      _selectedClienteId = null;
       return;
     }
     _selectedClienteId = exactCliente.id;
