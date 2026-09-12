@@ -134,6 +134,23 @@ void main() {
     expect(find.text('Vehículos'), findsOneWidget);
   });
 
+  testWidgets('formulario de vehículo encuentra clientes aunque se omitan tildes', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(body: VehiculoFormScreen()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'Maria');
+    await tester.pumpAndSettle();
+
+    expect(find.text('María López'), findsWidgets);
+  });
+
   testWidgets('formulario de vehículo limpia clienteId inválido y exige una selección válida', (tester) async {
     final clienteRepository = _TestClienteRepository([
       Cliente(

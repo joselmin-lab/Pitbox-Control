@@ -142,13 +142,13 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     textEditingController: _clienteController,
                     focusNode: _clienteFocusNode,
                     optionsBuilder: (textEditingValue) {
-                      final query = textEditingValue.text.trim().toLowerCase();
+                      final query = _normalizeClienteValue(textEditingValue.text);
                       if (_showAllClienteSuggestions) {
                         return clientes;
                       }
                       if (query.isNotEmpty) {
                         return clientes.where((cliente) {
-                          return cliente.nombreCompleto.toLowerCase().contains(query);
+                          return _normalizeClienteValue(cliente.nombreCompleto).contains(query);
                         });
                       }
                       return const <Cliente>[];
@@ -160,7 +160,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                       });
                       _setClienteFieldText(cliente.nombreCompleto);
                     },
-                    fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                    fieldViewBuilder: (context, textEditingController, focusNode, _) {
                       return TextFormField(
                         controller: textEditingController,
                         focusNode: focusNode,
@@ -212,7 +212,6 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                             clientes,
                             _findClienteByExactName(clientes, textEditingController.text),
                           );
-                          onFieldSubmitted();
                         },
                         validator: (_) {
                           final exactCliente =
@@ -480,6 +479,35 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   }
 
   String _normalizeClienteValue(String value) {
-    return value.trim().toLowerCase();
+    const replacements = {
+      'á': 'a',
+      'à': 'a',
+      'ä': 'a',
+      'â': 'a',
+      'é': 'e',
+      'è': 'e',
+      'ë': 'e',
+      'ê': 'e',
+      'í': 'i',
+      'ì': 'i',
+      'ï': 'i',
+      'î': 'i',
+      'ó': 'o',
+      'ò': 'o',
+      'ö': 'o',
+      'ô': 'o',
+      'ú': 'u',
+      'ù': 'u',
+      'ü': 'u',
+      'û': 'u',
+      'ñ': 'n',
+    };
+
+    final normalized = StringBuffer();
+    for (final rune in value.trim().toLowerCase().runes) {
+      final character = String.fromCharCode(rune);
+      normalized.write(replacements[character] ?? character);
+    }
+    return normalized.toString();
   }
 }
