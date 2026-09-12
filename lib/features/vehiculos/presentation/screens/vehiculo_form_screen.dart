@@ -36,6 +36,14 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   bool _saving = false;
 
   @override
+  void didUpdateWidget(covariant VehiculoFormScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehiculoId != widget.vehiculoId || oldWidget.clienteId != widget.clienteId) {
+      _initialized = false;
+    }
+  }
+
+  @override
   void dispose() {
     _placaController.dispose();
     _marcaController.dispose();

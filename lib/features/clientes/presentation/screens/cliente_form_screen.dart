@@ -28,6 +28,14 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
   bool _saving = false;
 
   @override
+  void didUpdateWidget(covariant ClienteFormScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.clienteId != widget.clienteId) {
+      _initialized = false;
+    }
+  }
+
+  @override
   void dispose() {
     _nombreController.dispose();
     _apellidoController.dispose();
