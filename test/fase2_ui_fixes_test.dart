@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pitbox_control/core/config/mock_ids.dart';
+import 'package:pitbox_control/features/clientes/data/repositories/in_memory_cliente_repository.dart';
 import 'package:pitbox_control/features/clientes/domain/models/cliente.dart';
 import 'package:pitbox_control/features/clientes/domain/repositories/cliente_repository.dart';
 import 'package:pitbox_control/features/clientes/presentation/screens/cliente_detail_screen.dart';
+import 'package:pitbox_control/features/vehiculos/data/repositories/in_memory_vehiculo_repository.dart';
 import 'package:pitbox_control/features/vehiculos/domain/models/vehiculo.dart';
 import 'package:pitbox_control/features/vehiculos/domain/repositories/vehiculo_repository.dart';
 import 'package:pitbox_control/features/vehiculos/presentation/screens/vehiculo_form_screen.dart';
+import 'package:pitbox_control/shared/data/in_memory_pitbox_store.dart';
 import 'package:pitbox_control/shared/providers/repository_providers.dart';
 import 'package:pitbox_control/shared/widgets/app_card.dart';
 
@@ -55,9 +58,14 @@ void main() {
   });
 
   testWidgets('detalle de cliente no muestra checkbox de selección en tabla de vehículos', (tester) async {
+    final store = InMemoryPitboxStore.seeded();
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(
+      ProviderScope(
+        overrides: [
+          clienteRepositoryProvider.overrideWithValue(InMemoryClienteRepository(store)),
+          vehiculoRepositoryProvider.overrideWithValue(InMemoryVehiculoRepository(store)),
+        ],
+        child: const MaterialApp(
           home: Scaffold(
             body: ClienteDetailScreen(clienteId: MockIds.clienteAna),
           ),
@@ -135,9 +143,22 @@ void main() {
   });
 
   testWidgets('formulario de vehículo encuentra clientes aunque se omitan tildes', (tester) async {
+    final clienteRepository = _TestClienteRepository([
+      Cliente(
+        id: MockIds.clienteMaria,
+        nombre: 'María',
+        apellido: 'López',
+        telefono: '73456789',
+        fechaRegistro: DateTime(2026, 3, 4),
+      ),
+    ]);
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(
+      ProviderScope(
+        overrides: [
+          clienteRepositoryProvider.overrideWithValue(clienteRepository),
+          vehiculoRepositoryProvider.overrideWithValue(_RecordingVehiculoRepository()),
+        ],
+        child: const MaterialApp(
           home: Scaffold(body: VehiculoFormScreen()),
         ),
       ),

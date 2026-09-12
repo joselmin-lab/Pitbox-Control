@@ -7,7 +7,7 @@ Pitbox Control es una app multiplataforma para la gestión de talleres mecánico
 - Flutter 3.x / Dart con null safety
 - `flutter_riverpod` para estado de UI desacoplado
 - `go_router` para navegación declarativa
-- `supabase_flutter` agregado como preparación para backend futuro
+- `supabase_flutter` para backend real de Clientes y Vehículos
 - `flutter_lints` para lint estricto
 
 ## Cómo ejecutar
@@ -52,7 +52,7 @@ lib/
   core/
     config/          # constantes globales y configuración base
     router/          # configuración de go_router
-    services/        # servicios transversales (scaffold Supabase)
+    services/        # servicios transversales (inicialización Supabase)
     theme/           # tema, colores y espaciados
   shared/
     models/          # modelos compartidos de UI/navegación
@@ -93,7 +93,7 @@ main.dart
 - **Riverpod**: se utiliza para manejar estado de UI simple (por ejemplo, colapso del sidebar) sin acoplar lógica a widgets.
 - **go_router**: centraliza rutas y mantiene una navegación escalable para web, móvil y futuras rutas protegidas.
 - **Modular por features**: cada módulo del taller está aislado por carpeta y preparado para evolucionar con capas `presentation`, `domain` y `data`.
-- **Supabase preparado**: se agregó `supabase_flutter` y se dejó un scaffold seguro con placeholders para URL y anon key, sin conexión real en esta fase.
+- **Supabase conectado**: Clientes y Vehículos usan repositorios reales con `supabase_flutter`.
 
 ## Alcance implementado (Fase 1 + Fase 2)
 
@@ -117,24 +117,45 @@ main.dart
 - [x] Rutas configuradas para Dashboard, Clientes, Vehículos, Proformas, Trabajos, Contabilidad y Configuración.
 - [x] Dashboard con KPI mock y widgets reutilizables.
 - [x] Tema global centralizado y constantes reutilizables.
-- [x] Scaffolding de Supabase sin credenciales reales.
+- [x] Conexión real a Supabase para Clientes y Vehículos.
 - [x] README documentado en español.
 - [x] CRUD de Clientes con validaciones y búsqueda.
 - [x] CRUD de Vehículos con validaciones y selector de cliente.
 - [x] Relación 1:N (un cliente con varios vehículos) visible en detalle de cliente.
 - [x] Navegación completa para crear/editar/ver detalle de clientes y vehículos.
-- [x] KPIs de dashboard para totales reales en memoria.
+- [x] KPIs de dashboard para totales reales desde repositorio de datos.
 
-## Repositorio en memoria (temporal antes de Supabase real)
+## Conexión a Supabase
 
-En esta fase, los módulos de Clientes y Vehículos usan repositorios en memoria (`InMemoryClienteRepository` e `InMemoryVehiculoRepository`) con datos semilla para pruebas rápidas.
+Las tablas `clientes` y `vehiculos` deben crearse antes de usar la app con datos reales.
 
-La capa de presentación consume contratos (`ClienteRepository`, `VehiculoRepository`) vía Riverpod, por lo que en una fase futura se puede reemplazar la implementación en memoria por una implementación Supabase sin cambiar widgets ni rutas.
+1. Entra a [supabase.com](https://supabase.com) y abre tu proyecto.
+2. Ve a **SQL Editor**.
+3. Abre el archivo `supabase/schema.sql` de este repositorio.
+4. Copia/pega su contenido y ejecútalo en el SQL Editor.
+
+> El script SQL se ejecuta manualmente desde Supabase (no desde esta app).
+
+Las credenciales del proyecto (URL y anon key) ya están configuradas en:
+
+- `lib/core/config/supabase_config.dart`
+
+La app inicializa Supabase en `main.dart` y los providers inyectan repositorios reales:
+
+- `SupabaseClienteRepository`
+- `SupabaseVehiculoRepository`
+
+## Checklist de fase de datos
+
+- [x] Conexión real de Clientes a Supabase.
+- [x] Conexión real de Vehículos a Supabase.
+- [x] Relación 1:N Cliente → Vehículos persistida con FK en base de datos.
+- [x] Script SQL con RLS y políticas básicas para fase sin autenticación.
 
 ## Siguiente fase recomendada
 
-Conectar repositorios a **Supabase real** y habilitar módulos de **Proformas + Trabajos**:
+Implementar **Proformas + Trabajos** sobre Supabase y agregar autenticación/roles:
 
-- Reemplazar repositorios en memoria por implementaciones Supabase respetando los mismos contratos de dominio.
-- Persistir relación Cliente-Vehículo en base de datos y sincronizar formularios/listados.
-- Implementar flujo operativo Proforma → Trabajo con estados y trazabilidad.
+- Crear tablas y repositorios Supabase para Proformas y Trabajos desde el inicio.
+- Definir flujo operativo Proforma → Trabajo con estados y trazabilidad.
+- Habilitar autenticación y endurecer políticas RLS por usuario/rol.
