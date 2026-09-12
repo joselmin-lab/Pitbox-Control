@@ -3,9 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_constants.dart';
 import 'core/router/app_router.dart';
+import 'core/services/supabase_service.dart';
 import 'core/theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await const SupabaseService().initialize();
+  } catch (error) {
+    debugPrint('No se pudo inicializar Supabase: $error');
+  }
   runApp(const ProviderScope(child: PitboxControlApp()));
 }
 

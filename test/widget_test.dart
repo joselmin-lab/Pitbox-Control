@@ -1,17 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:pitbox_control/features/clientes/data/repositories/in_memory_cliente_repository.dart';
 import 'package:pitbox_control/features/clientes/domain/models/cliente.dart';
 import 'package:pitbox_control/features/clientes/domain/repositories/cliente_repository.dart';
+import 'package:pitbox_control/features/vehiculos/data/repositories/in_memory_vehiculo_repository.dart';
 import 'package:pitbox_control/features/vehiculos/domain/models/vehiculo.dart';
 import 'package:pitbox_control/features/vehiculos/domain/repositories/vehiculo_repository.dart';
 import 'package:pitbox_control/main.dart';
+import 'package:pitbox_control/shared/data/in_memory_pitbox_store.dart';
 import 'package:pitbox_control/shared/providers/repository_providers.dart';
 import 'package:pitbox_control/shared/widgets/kpi_card.dart';
 
 void main() {
   testWidgets('muestra el dashboard inicial y el branding principal', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: PitboxControlApp()));
+    final store = InMemoryPitboxStore.seeded();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clienteRepositoryProvider.overrideWithValue(InMemoryClienteRepository(store)),
+          vehiculoRepositoryProvider.overrideWithValue(InMemoryVehiculoRepository(store)),
+        ],
+        child: const PitboxControlApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Pitbox Control'), findsOneWidget);
