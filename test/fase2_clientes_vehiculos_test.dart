@@ -190,7 +190,7 @@ void main() {
     final creado = clientes.firstWhere((item) => item.telefono == '79999999');
     expect(creado.email, isNull);
 
-    await container.read(clientesProvider.notifier).update(
+    await container.read(clientesProvider.notifier).editarCliente(
           id: creado.id,
           fechaRegistro: creado.fechaRegistro,
           nombre: creado.nombre,
@@ -224,7 +224,7 @@ void main() {
     final creado = vehiculos.firstWhere((item) => item.placa == 'KM-0001');
     expect(creado.kilometraje, isNull);
 
-    await container.read(vehiculosProvider.notifier).update(
+    await container.read(vehiculosProvider.notifier).editarVehiculo(
           id: creado.id,
           fechaRegistro: creado.fechaRegistro,
           clienteId: creado.clienteId,

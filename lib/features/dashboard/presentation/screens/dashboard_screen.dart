@@ -20,12 +20,12 @@ class DashboardScreen extends ConsumerWidget {
     final totalClientes = ref.watch(clientesProvider).when(
           data: (clientes) => '${clientes.length}',
           loading: () => '...',
-          error: (_, _) => '—',
+          error: (error, stackTrace) => '—',
         );
     final totalVehiculos = ref.watch(vehiculosProvider).when(
           data: (vehiculos) => '${vehiculos.length}',
           loading: () => '...',
-          error: (_, _) => '—',
+          error: (error, stackTrace) => '—',
         );
     final kpis = <({String title, String value, IconData icon, bool highlight})>[
       (

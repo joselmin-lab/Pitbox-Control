@@ -136,7 +136,7 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
                             setState(() => _saving = true);
                             try {
                               if (isEdit) {
-                                await ref.read(clientesProvider.notifier).update(
+                                await ref.read(clientesProvider.notifier).editarCliente(
                                       id: cliente.id,
                                       fechaRegistro: cliente.fechaRegistro,
                                       nombre: _nombreController.text.trim(),
