@@ -37,6 +37,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   String? _selectedClienteId;
   bool _initialized = false;
   bool _saving = false;
+  bool _showAllClienteSuggestions = false;
 
   @override
   void didUpdateWidget(covariant VehiculoFormScreen oldWidget) {
@@ -142,16 +143,20 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     focusNode: _clienteFocusNode,
                     optionsBuilder: (textEditingValue) {
                       final query = textEditingValue.text.trim().toLowerCase();
-                      if (query.isEmpty) {
+                      if (query.isNotEmpty) {
+                        return clientes.where((cliente) {
+                          return cliente.nombreCompleto.toLowerCase().contains(query);
+                        });
+                      }
+                      if (_showAllClienteSuggestions) {
                         return clientes;
                       }
-                      return clientes.where((cliente) {
-                        return cliente.nombreCompleto.toLowerCase().contains(query);
-                      });
+                      return const <Cliente>[];
                     },
                     onSelected: (cliente) {
                       setState(() {
                         _selectedClienteId = cliente.id;
+                        _showAllClienteSuggestions = false;
                       });
                       _setClienteFieldText(cliente.nombreCompleto);
                     },
@@ -159,12 +164,28 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                       return TextFormField(
                         controller: textEditingController,
                         focusNode: focusNode,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Cliente asociado *',
                           hintText: 'Buscar cliente por nombre',
                           helperText: 'Selecciona un cliente de la lista o escribe el nombre completo.',
+                          suffixIcon: IconButton(
+                            tooltip: 'Mostrar clientes',
+                            icon: const Icon(Icons.arrow_drop_down_rounded),
+                            onPressed: () {
+                              setState(() => _showAllClienteSuggestions = true);
+                              _clienteFocusNode.requestFocus();
+                              _clienteController.value = TextEditingValue(
+                                text: _clienteController.text,
+                                selection: TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: _clienteController.text.length,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                         onChanged: (value) {
+                          _showAllClienteSuggestions = false;
                           final exactCliente = _findClienteByExactName(clientes, value);
                           final currentSelectedCliente = _findClienteById(clientes, _selectedClienteId);
                           final normalizedValue = _normalizeClienteValue(value);
@@ -406,6 +427,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   }
 
   void _resolveClienteSelection(List<Cliente> clientes) {
+    _showAllClienteSuggestions = false;
     final exactCliente = _findClienteByExactName(clientes, _clienteController.text);
     if (exactCliente == null) {
       _selectedClienteId = null;
