@@ -25,6 +25,8 @@ class VehiculoFormScreen extends ConsumerStatefulWidget {
 
 class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _clienteController = TextEditingController();
+  final _clienteFocusNode = FocusNode();
   final _placaController = TextEditingController();
   final _marcaController = TextEditingController();
   final _modeloController = TextEditingController();
@@ -32,7 +34,6 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   final _colorController = TextEditingController();
   final _kilometrajeController = TextEditingController();
 
-  String _clienteQuery = '';
   String? _selectedClienteId;
   bool _initialized = false;
   bool _saving = false;
@@ -47,6 +48,8 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
 
   @override
   void dispose() {
+    _clienteController.dispose();
+    _clienteFocusNode.dispose();
     _placaController.dispose();
     _marcaController.dispose();
     _modeloController.dispose();
@@ -109,22 +112,19 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
       _colorController.text = vehiculo?.color ?? '';
       _kilometrajeController.text = vehiculo?.kilometraje?.toString() ?? '';
       _selectedClienteId = vehiculo?.clienteId ?? widget.clienteId;
-      _clienteQuery = '';
-      for (final cliente in clientes) {
-        if (cliente.id == _selectedClienteId) {
-          _clienteQuery = cliente.nombreCompleto;
-          break;
-        }
-      }
+      _syncClienteField(clientes);
       _initialized = true;
     }
 
     final isEdit = vehiculo != null;
-    final clienteIds = clientes.map((item) => item.id).toSet();
-    final selectedClienteId = clienteIds.contains(_selectedClienteId) ? _selectedClienteId : null;
-    final selectedCliente = selectedClienteId == null
-        ? null
-        : clientes.firstWhere((item) => item.id == selectedClienteId);
+    final selectedCliente = _findClienteById(clientes, _selectedClienteId);
+
+    if (selectedCliente != null &&
+        !_clienteFocusNode.hasFocus &&
+        _normalizeClienteValue(_clienteController.text) !=
+            _normalizeClienteValue(selectedCliente.nombreCompleto)) {
+      _setClienteFieldText(selectedCliente.nombreCompleto);
+    }
 
     return SingleChildScrollView(
       child: AppSectionCard(
@@ -134,12 +134,10 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Autocomplete<Cliente>(
-                key: ValueKey(
-                  'cliente-autocomplete-${widget.vehiculoId ?? 'nuevo'}-${widget.clienteId ?? 'sin-cliente'}',
-                ),
+              RawAutocomplete<Cliente>(
                 displayStringForOption: (cliente) => cliente.nombreCompleto,
-                initialValue: TextEditingValue(text: _clienteQuery),
+                textEditingController: _clienteController,
+                focusNode: _clienteFocusNode,
                 optionsBuilder: (textEditingValue) {
                   final query = textEditingValue.text.trim().toLowerCase();
                   if (query.isEmpty) {
@@ -152,8 +150,8 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                 onSelected: (cliente) {
                   setState(() {
                     _selectedClienteId = cliente.id;
-                    _clienteQuery = cliente.nombreCompleto;
                   });
+                  _setClienteFieldText(cliente.nombreCompleto);
                 },
                 fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
                   return TextFormField(
@@ -164,23 +162,54 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                       hintText: 'Buscar cliente por nombre',
                     ),
                     onChanged: (value) {
-                      _clienteQuery = value;
-                      final normalizedValue = value.trim().toLowerCase();
+                      final exactCliente = _findClienteByExactName(clientes, value);
+                      final nextClienteId = exactCliente?.id;
+                      final normalizedValue = _normalizeClienteValue(value);
                       final normalizedSelectedName =
-                          selectedCliente?.nombreCompleto.trim().toLowerCase();
-                      final matchesSelected =
-                          normalizedSelectedName != null && normalizedValue == normalizedSelectedName;
-                      if (!matchesSelected && _selectedClienteId != null) {
+                          _normalizeClienteValue(selectedCliente?.nombreCompleto ?? '');
+                      final matchesSelected = normalizedValue == normalizedSelectedName;
+
+                      if (nextClienteId != _selectedClienteId) {
+                        setState(() => _selectedClienteId = nextClienteId);
+                      } else if (!matchesSelected && exactCliente == null && _selectedClienteId != null) {
                         setState(() => _selectedClienteId = null);
                       }
                     },
-                    onFieldSubmitted: (_) => onFieldSubmitted(),
+                    onFieldSubmitted: (_) {
+                      _resolveClienteSelection(clientes);
+                      onFieldSubmitted();
+                    },
                     validator: (_) {
-                      if (_selectedClienteId == null || _selectedClienteId!.isEmpty) {
+                      final exactCliente = _findClienteByExactName(clientes, textEditingController.text);
+                      if ((_selectedClienteId == null || _selectedClienteId!.isEmpty) &&
+                          exactCliente == null) {
                         return 'Debes seleccionar un cliente.';
                       }
                       return null;
                     },
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 240, minWidth: 320),
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (context, index) {
+                            final cliente = options.elementAt(index);
+                            return ListTile(
+                              title: Text(cliente.nombreCompleto),
+                              onTap: () => onSelected(cliente),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
@@ -264,6 +293,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     onPressed: _saving
                         ? null
                         : () async {
+                            _resolveClienteSelection(clientes);
                             if (!_formKey.currentState!.validate()) {
                               return;
                             }
@@ -326,5 +356,62 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
         ),
       ),
     );
+  }
+
+  Cliente? _findClienteByExactName(List<Cliente> clientes, String value) {
+    final normalizedValue = _normalizeClienteValue(value);
+    if (normalizedValue.isEmpty) {
+      return null;
+    }
+    for (final cliente in clientes) {
+      if (_normalizeClienteValue(cliente.nombreCompleto) == normalizedValue) {
+        return cliente;
+      }
+    }
+    return null;
+  }
+
+  Cliente? _findClienteById(List<Cliente> clientes, String? clienteId) {
+    if (clienteId == null) {
+      return null;
+    }
+    for (final cliente in clientes) {
+      if (cliente.id == clienteId) {
+        return cliente;
+      }
+    }
+    return null;
+  }
+
+  void _resolveClienteSelection(List<Cliente> clientes) {
+    final exactCliente = _findClienteByExactName(clientes, _clienteController.text);
+    if (exactCliente == null) {
+      return;
+    }
+    _selectedClienteId = exactCliente.id;
+    _setClienteFieldText(exactCliente.nombreCompleto);
+  }
+
+  void _setClienteFieldText(String value) {
+    _clienteController.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+  }
+
+  void _syncClienteField(List<Cliente> clientes) {
+    final selectedCliente = _findClienteById(clientes, _selectedClienteId);
+    if (selectedCliente == null) {
+      if (_selectedClienteId != null) {
+        _selectedClienteId = null;
+      }
+      _setClienteFieldText('');
+      return;
+    }
+    _setClienteFieldText(selectedCliente.nombreCompleto);
+  }
+
+  String _normalizeClienteValue(String value) {
+    return value.trim().toLowerCase();
   }
 }
