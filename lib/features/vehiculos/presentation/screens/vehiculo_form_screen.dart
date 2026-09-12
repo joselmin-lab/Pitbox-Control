@@ -429,6 +429,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     final matchedCliente = _findClienteSelectionMatch(clientes, _clienteController.text);
     if (matchedCliente == null) {
       _selectedClienteId = null;
+      _setClienteFieldText('');
       return;
     }
     _selectedClienteId = matchedCliente.id;
