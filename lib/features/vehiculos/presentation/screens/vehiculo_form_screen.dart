@@ -94,6 +94,8 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     }
 
     final isEdit = vehiculo != null;
+    final clienteIds = clientes.map((item) => item.id).toSet();
+    final selectedClienteId = clienteIds.contains(_selectedClienteId) ? _selectedClienteId : null;
 
     return SingleChildScrollView(
       child: AppSectionCard(
@@ -104,7 +106,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DropdownButtonFormField<String>(
-                value: _selectedClienteId,
+                value: selectedClienteId,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Cliente asociado *'),
                 items: [

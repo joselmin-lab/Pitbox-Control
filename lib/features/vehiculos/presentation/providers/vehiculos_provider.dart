@@ -36,7 +36,15 @@ final vehiculoByIdProvider = Provider.family<Vehiculo?, String>((ref, vehiculoId
 
 final vehiculosByClienteIdProvider = Provider.family<List<Vehiculo>, String>((ref, clienteId) {
   final vehiculos = ref.watch(vehiculosProvider).valueOrNull ?? const <Vehiculo>[];
-  return vehiculos.where((vehiculo) => vehiculo.clienteId == clienteId).toList(growable: false);
+  final result = vehiculos.where((vehiculo) => vehiculo.clienteId == clienteId).toList();
+  result.sort((a, b) {
+    final byFecha = a.fechaRegistro.compareTo(b.fechaRegistro);
+    if (byFecha != 0) {
+      return byFecha;
+    }
+    return a.id.compareTo(b.id);
+  });
+  return result;
 });
 
 class VehiculosNotifier extends AsyncNotifier<List<Vehiculo>> {

@@ -136,6 +136,43 @@ void main() {
       ['veh-partial-a', 'veh-partial-b'],
     );
   });
+
+  test('eliminar un cliente inexistente no altera los vehículos', () async {
+    final cliente = Cliente(
+      id: 'cli-noop',
+      nombre: 'Cliente',
+      apellido: 'Noop',
+      telefono: '76666666',
+      fechaRegistro: DateTime(2026, 1, 1),
+    );
+    final vehiculo = Vehiculo(
+      id: 'veh-noop',
+      clienteId: 'cli-noop',
+      placa: 'NOOP-001',
+      marca: 'Nissan',
+      modelo: 'Versa',
+      anio: 2022,
+      fechaRegistro: DateTime(2026, 1, 1),
+    );
+
+    final clienteRepository = _MemoryClienteRepository(seed: []);
+    final vehiculoRepository = _MemoryVehiculoRepository(seed: [vehiculo]);
+
+    final container = ProviderContainer(
+      overrides: [
+        clienteRepositoryProvider.overrideWithValue(clienteRepository),
+        vehiculoRepositoryProvider.overrideWithValue(vehiculoRepository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(clientesProvider.future);
+    await container.read(vehiculosProvider.future);
+
+    await container.read(clientesProvider.notifier).delete(cliente.id);
+
+    expect(container.read(vehiculosByClienteIdProvider(cliente.id)), isNotEmpty);
+  });
 }
 
 class _FailingDeleteClienteRepository implements ClienteRepository {

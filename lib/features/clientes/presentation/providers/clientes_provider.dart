@@ -92,6 +92,9 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
     final vehiculoRepository = ref.read(vehiculoRepositoryProvider);
 
     final clienteSnapshot = await clienteRepository.getById(clienteId);
+    if (clienteSnapshot == null) {
+      return;
+    }
     final vehiculosSnapshot = await vehiculoRepository.getByClienteId(clienteId);
 
     try {
@@ -100,20 +103,13 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
       await clienteRepository.delete(clienteId);
     } catch (_) {
       // En caso de error, se restaura el estado previo en memoria.
-      if (clienteSnapshot != null && await clienteRepository.getById(clienteId) == null) {
+      if (await clienteRepository.getById(clienteId) == null) {
         await clienteRepository.create(clienteSnapshot);
       }
       final remainingVehiculos = await vehiculoRepository.getByClienteId(clienteId);
-      final currentOrder = remainingVehiculos.map((vehiculo) => vehiculo.id).toList(growable: false);
-      final expectedOrder = vehiculosSnapshot.map((vehiculo) => vehiculo.id).toList(growable: false);
-      final sameOrder =
-          currentOrder.length == expectedOrder.length &&
-          List.generate(currentOrder.length, (index) => currentOrder[index] == expectedOrder[index]).every(
-            (isEqual) => isEqual,
-          );
-      if (!sameOrder) {
-        await vehiculoRepository.deleteByClienteId(clienteId);
-        for (final vehiculo in vehiculosSnapshot) {
+      final remainingIds = remainingVehiculos.map((vehiculo) => vehiculo.id).toSet();
+      for (final vehiculo in vehiculosSnapshot) {
+        if (!remainingIds.contains(vehiculo.id)) {
           await vehiculoRepository.create(vehiculo);
         }
       }

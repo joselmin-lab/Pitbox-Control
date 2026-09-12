@@ -31,6 +31,7 @@ class ClienteDetailScreen extends ConsumerWidget {
       return const Center(child: Text('Cliente no encontrado.'));
     }
 
+    final vehiculosAsync = ref.watch(vehiculosProvider);
     final vehiculos = ref.watch(vehiculosByClienteIdProvider(clienteId));
 
     return SingleChildScrollView(
@@ -115,32 +116,39 @@ class ClienteDetailScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           AppSectionCard(
             title: 'Vehículos asociados',
-            child: vehiculos.isEmpty
-                ? const Text('Este cliente aún no tiene vehículos registrados.')
-                : AppDataTable(
-                    columns: const [
-                      DataColumn(label: Text('Placa')),
-                      DataColumn(label: Text('Marca')),
-                      DataColumn(label: Text('Modelo')),
-                      DataColumn(label: Text('Año')),
-                    ],
-                    rows: [
-                      for (final vehiculo in vehiculos)
-                        DataRow(
-                          onSelectChanged: (selected) {
-                            if (selected == true) {
-                              context.go('/vehiculos/${vehiculo.id}');
-                            }
-                          },
-                          cells: [
-                            DataCell(Text(vehiculo.placa)),
-                            DataCell(Text(vehiculo.marca)),
-                            DataCell(Text(vehiculo.modelo)),
-                            DataCell(Text('${vehiculo.anio}')),
-                          ],
-                        ),
-                    ],
-                  ),
+            child: vehiculosAsync.when(
+              loading: () => const CircularProgressIndicator(),
+              error: (error, _) => Text('Error al cargar vehículos: $error'),
+              data: (_) {
+                if (vehiculos.isEmpty) {
+                  return const Text('Este cliente aún no tiene vehículos registrados.');
+                }
+                return AppDataTable(
+                  columns: const [
+                    DataColumn(label: Text('Placa')),
+                    DataColumn(label: Text('Marca')),
+                    DataColumn(label: Text('Modelo')),
+                    DataColumn(label: Text('Año')),
+                  ],
+                  rows: [
+                    for (final vehiculo in vehiculos)
+                      DataRow(
+                        onSelectChanged: (selected) {
+                          if (selected == true) {
+                            context.go('/vehiculos/${vehiculo.id}');
+                          }
+                        },
+                        cells: [
+                          DataCell(Text(vehiculo.placa)),
+                          DataCell(Text(vehiculo.marca)),
+                          DataCell(Text(vehiculo.modelo)),
+                          DataCell(Text('${vehiculo.anio}')),
+                        ],
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),

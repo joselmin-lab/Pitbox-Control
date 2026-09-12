@@ -30,6 +30,7 @@ class VehiculoDetailScreen extends ConsumerWidget {
       return const Center(child: Text('Vehículo no encontrado.'));
     }
 
+    final clientesAsync = ref.watch(clientesProvider);
     final cliente = ref.watch(clienteByIdProvider(vehiculo.clienteId));
 
     return SingleChildScrollView(
@@ -109,30 +110,37 @@ class VehiculoDetailScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           AppSectionCard(
             title: 'Cliente propietario',
-            child: cliente == null
-                ? const Text('No se encontró el cliente asociado.')
-                : Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              cliente.nombreCompleto,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text('Teléfono: ${cliente.telefono}'),
-                            Text('Email: ${cliente.email ?? 'No registrado'}'),
-                          ],
-                        ),
+            child: clientesAsync.when(
+              loading: () => const CircularProgressIndicator(),
+              error: (error, _) => Text('Error al cargar cliente: $error'),
+              data: (_) {
+                if (cliente == null) {
+                  return const Text('No se encontró el cliente asociado.');
+                }
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cliente.nombreCompleto,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text('Teléfono: ${cliente.telefono}'),
+                          Text('Email: ${cliente.email ?? 'No registrado'}'),
+                        ],
                       ),
-                      AppPrimaryButton(
-                        label: 'Ver cliente',
-                        onPressed: () => context.go('/clientes/${cliente.id}'),
-                      ),
-                    ],
-                  ),
+                    ),
+                    AppPrimaryButton(
+                      label: 'Ver cliente',
+                      onPressed: () => context.go('/clientes/${cliente.id}'),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
