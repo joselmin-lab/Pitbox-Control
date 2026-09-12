@@ -104,8 +104,9 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
         await clienteRepository.create(clienteSnapshot);
       }
       final remainingVehiculos = await vehiculoRepository.getByClienteId(clienteId);
-      if (remainingVehiculos.isEmpty && vehiculosSnapshot.isNotEmpty) {
-        for (final vehiculo in vehiculosSnapshot) {
+      final remainingIds = remainingVehiculos.map((vehiculo) => vehiculo.id).toSet();
+      for (final vehiculo in vehiculosSnapshot) {
+        if (!remainingIds.contains(vehiculo.id)) {
           await vehiculoRepository.create(vehiculo);
         }
       }

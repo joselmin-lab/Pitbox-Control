@@ -82,9 +82,17 @@ class VehiculoDetailScreen extends ConsumerWidget {
                         if (accepted != true) {
                           return;
                         }
-                        await ref.read(vehiculosProvider.notifier).delete(vehiculo.id);
-                        if (context.mounted) {
-                          context.go('/vehiculos');
+                        try {
+                          await ref.read(vehiculosProvider.notifier).delete(vehiculo.id);
+                          if (context.mounted) {
+                            context.go('/vehiculos');
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('No se pudo eliminar el vehículo. Intenta nuevamente.')),
+                            );
+                          }
                         }
                       },
                       icon: const Icon(Icons.delete_rounded),

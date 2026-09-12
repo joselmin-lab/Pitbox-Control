@@ -157,6 +157,12 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
                                   context.go('/clientes');
                                 }
                               }
+                            } catch (_) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('No se pudo guardar el cliente. Intenta nuevamente.')),
+                                );
+                              }
                             } finally {
                               if (mounted) {
                                 setState(() => _saving = false);

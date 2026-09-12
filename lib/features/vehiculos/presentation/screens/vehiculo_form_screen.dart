@@ -231,6 +231,12 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                                   context.go('/vehiculos');
                                 }
                               }
+                            } catch (_) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('No se pudo guardar el vehículo. Intenta nuevamente.')),
+                                );
+                              }
                             } finally {
                               if (mounted) {
                                 setState(() => _saving = false);

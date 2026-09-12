@@ -88,9 +88,17 @@ class ClienteDetailScreen extends ConsumerWidget {
                         if (accepted != true) {
                           return;
                         }
-                        await ref.read(clientesProvider.notifier).delete(cliente.id);
-                        if (context.mounted) {
-                          context.go('/clientes');
+                        try {
+                          await ref.read(clientesProvider.notifier).delete(cliente.id);
+                          if (context.mounted) {
+                            context.go('/clientes');
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('No se pudo eliminar el cliente. Intenta nuevamente.')),
+                            );
+                          }
                         }
                       },
                       icon: const Icon(Icons.delete_rounded),
