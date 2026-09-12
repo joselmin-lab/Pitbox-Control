@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:pitbox_control/features/clientes/domain/models/cliente.dart';
 import 'package:pitbox_control/features/clientes/domain/repositories/cliente_repository.dart';
 import 'package:pitbox_control/features/clientes/presentation/providers/clientes_provider.dart';
@@ -131,7 +131,10 @@ void main() {
     final vehiculosActuales = container.read(vehiculosByClienteIdProvider(cliente.id));
 
     expect(clienteActual, isNotNull);
-    expect(vehiculosActuales.map((item) => item.id).toSet(), {'veh-partial-a', 'veh-partial-b'});
+    expect(
+      vehiculosActuales.map((item) => item.id).toList(growable: false),
+      ['veh-partial-a', 'veh-partial-b'],
+    );
   });
 }
 
@@ -147,48 +150,48 @@ class _FailingDeleteClienteRepository implements ClienteRepository {
     return cliente;
   }
 
-  class _MemoryClienteRepository implements ClienteRepository {
-    _MemoryClienteRepository({required List<Cliente> seed}) : _clientes = [...seed];
+  @override
+  Future<void> delete(String id) async {
+    _clientes.removeWhere((item) => item.id == id);
+    throw StateError('Fallo controlado');
+  }
 
-    final List<Cliente> _clientes;
+  @override
+  Future<List<Cliente>> getAll() async => List.unmodifiable(_clientes);
 
-    @override
-    Future<Cliente> create(Cliente cliente) async {
-      _clientes.removeWhere((item) => item.id == cliente.id);
-      _clientes.add(cliente);
-      return cliente;
-    }
-
-    @override
-    Future<void> delete(String id) async {
-      _clientes.removeWhere((item) => item.id == id);
-    }
-
-    @override
-    Future<List<Cliente>> getAll() async => List.unmodifiable(_clientes);
-
-    @override
-    Future<Cliente?> getById(String id) async {
-      for (final cliente in _clientes) {
-        if (cliente.id == id) {
-          return cliente;
-        }
+  @override
+  Future<Cliente?> getById(String id) async {
+    for (final cliente in _clientes) {
+      if (cliente.id == id) {
+        return cliente;
       }
-      return null;
     }
+    return null;
+  }
 
-    @override
-    Future<Cliente> update(Cliente cliente) async {
-      final index = _clientes.indexWhere((item) => item.id == cliente.id);
-      _clientes[index] = cliente;
-      return cliente;
-    }
+  @override
+  Future<Cliente> update(Cliente cliente) async {
+    final index = _clientes.indexWhere((item) => item.id == cliente.id);
+    _clientes[index] = cliente;
+    return cliente;
+  }
+}
+
+class _MemoryClienteRepository implements ClienteRepository {
+  _MemoryClienteRepository({required List<Cliente> seed}) : _clientes = [...seed];
+
+  final List<Cliente> _clientes;
+
+  @override
+  Future<Cliente> create(Cliente cliente) async {
+    _clientes.removeWhere((item) => item.id == cliente.id);
+    _clientes.add(cliente);
+    return cliente;
   }
 
   @override
   Future<void> delete(String id) async {
     _clientes.removeWhere((item) => item.id == id);
-    throw StateError('Fallo controlado');
   }
 
   @override
@@ -224,19 +227,6 @@ class _MemoryVehiculoRepository implements VehiculoRepository {
     return vehiculo;
   }
 
-  class _PartialFailVehiculoRepository extends _MemoryVehiculoRepository {
-    _PartialFailVehiculoRepository({required List<Vehiculo> seed}) : super(seed: seed);
-
-    @override
-    Future<void> deleteByClienteId(String clienteId) async {
-      final ids = (await getByClienteId(clienteId)).map((vehiculo) => vehiculo.id).toList(growable: false);
-      if (ids.isNotEmpty) {
-        await delete(ids.first);
-      }
-      throw StateError('Fallo parcial controlado');
-    }
-  }
-
   @override
   Future<void> delete(String id) async {
     _vehiculos.removeWhere((vehiculo) => vehiculo.id == id);
@@ -270,5 +260,18 @@ class _MemoryVehiculoRepository implements VehiculoRepository {
     final index = _vehiculos.indexWhere((item) => item.id == vehiculo.id);
     _vehiculos[index] = vehiculo;
     return vehiculo;
+  }
+}
+
+class _PartialFailVehiculoRepository extends _MemoryVehiculoRepository {
+  _PartialFailVehiculoRepository({required List<Vehiculo> seed}) : super(seed: seed);
+
+  @override
+  Future<void> deleteByClienteId(String clienteId) async {
+    final ids = (await getByClienteId(clienteId)).map((vehiculo) => vehiculo.id).toList(growable: false);
+    if (ids.isNotEmpty) {
+      await delete(ids.first);
+    }
+    throw StateError('Fallo parcial controlado');
   }
 }

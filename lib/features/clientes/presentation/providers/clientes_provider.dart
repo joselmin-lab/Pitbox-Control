@@ -104,9 +104,16 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
         await clienteRepository.create(clienteSnapshot);
       }
       final remainingVehiculos = await vehiculoRepository.getByClienteId(clienteId);
-      final remainingIds = remainingVehiculos.map((vehiculo) => vehiculo.id).toSet();
-      for (final vehiculo in vehiculosSnapshot) {
-        if (!remainingIds.contains(vehiculo.id)) {
+      final currentOrder = remainingVehiculos.map((vehiculo) => vehiculo.id).toList(growable: false);
+      final expectedOrder = vehiculosSnapshot.map((vehiculo) => vehiculo.id).toList(growable: false);
+      final sameOrder =
+          currentOrder.length == expectedOrder.length &&
+          List.generate(currentOrder.length, (index) => currentOrder[index] == expectedOrder[index]).every(
+            (isEqual) => isEqual,
+          );
+      if (!sameOrder) {
+        await vehiculoRepository.deleteByClienteId(clienteId);
+        for (final vehiculo in vehiculosSnapshot) {
           await vehiculoRepository.create(vehiculo);
         }
       }

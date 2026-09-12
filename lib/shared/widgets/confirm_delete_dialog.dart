@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 class ConfirmDeleteDialog extends StatelessWidget {
   const ConfirmDeleteDialog({
     required this.title,
@@ -24,9 +26,14 @@ class ConfirmDeleteDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(cancelLabel),
         ),
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(confirmLabel),
+        Semantics(
+          button: true,
+          label: 'Confirmar eliminación',
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(confirmLabel),
+          ),
         ),
       ],
     );
