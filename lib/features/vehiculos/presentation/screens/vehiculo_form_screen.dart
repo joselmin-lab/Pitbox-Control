@@ -188,7 +188,6 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                           if (_showAllClienteSuggestions) {
                             setState(() => _showAllClienteSuggestions = false);
                           }
-                          final exactCliente = _findClienteByExactName(clientes, value);
                           final currentSelectedCliente = _findClienteById(clientes, _selectedClienteId);
                           final normalizedValue = _normalizeClienteValue(value);
                           final normalizedSelectedName =
@@ -199,25 +198,15 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                           if (stillMatchesSelected) {
                             return;
                           }
-                          if (exactCliente != null && exactCliente.id != _selectedClienteId) {
-                            setState(() => _selectedClienteId = exactCliente.id);
-                            return;
-                          }
-                          if (exactCliente == null && _selectedClienteId != null) {
+                          if (_selectedClienteId != null) {
                             setState(() => _selectedClienteId = null);
                           }
                         },
                         onFieldSubmitted: (_) {
-                          _applyResolvedClienteSelection(
-                            clientes,
-                            _findClienteByExactName(clientes, textEditingController.text),
-                          );
+                          _syncSelectedClienteWithField(clientes);
                         },
                         validator: (_) {
-                          final exactCliente =
-                              _findClienteByExactName(clientes, textEditingController.text);
-                          if ((_selectedClienteId == null || _selectedClienteId!.isEmpty) &&
-                              exactCliente == null) {
+                          if (_selectedClienteId == null || _selectedClienteId!.isEmpty) {
                             return 'Debes seleccionar un cliente.';
                           }
                           return null;
@@ -348,10 +337,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     onPressed: _saving
                         ? null
                         : () async {
-                            _applyResolvedClienteSelection(
-                              clientes,
-                              _findClienteByExactName(clientes, _clienteController.text),
-                            );
+                            _syncSelectedClienteWithField(clientes);
                             if (!_formKey.currentState!.validate()) {
                               return;
                             }
@@ -416,23 +402,6 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     );
   }
 
-  Cliente? _findClienteByExactName(List<Cliente> clientes, String value) {
-    final normalizedValue = _normalizeClienteValue(value);
-    if (normalizedValue.isEmpty) {
-      return null;
-    }
-    Cliente? match;
-    for (final cliente in clientes) {
-      if (_normalizeClienteValue(cliente.nombreCompleto) == normalizedValue) {
-        if (match != null) {
-          return null;
-        }
-        match = cliente;
-      }
-    }
-    return match;
-  }
-
   Cliente? _findClienteById(List<Cliente> clientes, String? clienteId) {
     if (clienteId == null) {
       return null;
@@ -452,20 +421,22 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     );
   }
 
-  void _applyResolvedClienteSelection(List<Cliente> clientes, Cliente? cliente) {
-    final previousSelectedCliente = _findClienteById(clientes, _selectedClienteId);
-    final shouldClearField = cliente == null &&
-        previousSelectedCliente != null &&
+  void _syncSelectedClienteWithField(List<Cliente> clientes) {
+    final selectedCliente = _findClienteById(clientes, _selectedClienteId);
+    final hadSelectedClienteId = _selectedClienteId != null;
+    final textMatchesSelection = selectedCliente != null &&
         _normalizeClienteValue(_clienteController.text) ==
-            _normalizeClienteValue(previousSelectedCliente.nombreCompleto);
+            _normalizeClienteValue(selectedCliente.nombreCompleto);
 
     setState(() {
       _showAllClienteSuggestions = false;
-      _selectedClienteId = cliente?.id;
+      if (!textMatchesSelection) {
+        _selectedClienteId = null;
+      }
     });
-    if (cliente != null) {
-      _setClienteFieldText(cliente.nombreCompleto);
-    } else if (shouldClearField) {
+    if (textMatchesSelection && selectedCliente != null) {
+      _setClienteFieldText(selectedCliente.nombreCompleto);
+    } else if (selectedCliente == null && hadSelectedClienteId) {
       _setClienteFieldText('');
     }
   }

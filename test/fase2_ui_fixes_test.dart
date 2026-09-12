@@ -194,7 +194,7 @@ void main() {
     expect(vehiculoRepository.createdVehiculo, isNull);
   });
 
-  testWidgets('formulario de vehículo acepta nombre completo sin tocar sugerencia', (
+  testWidgets('formulario de vehículo exige selección explícita aunque se escriba el nombre completo', (
     tester,
   ) async {
     final clienteRepository = _TestClienteRepository([
@@ -247,8 +247,8 @@ void main() {
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
-    expect(vehiculoRepository.createdVehiculo?.clienteId, MockIds.clienteAna);
-    expect(find.text('Vehículos'), findsOneWidget);
+    expect(find.text('Debes seleccionar un cliente.'), findsOneWidget);
+    expect(vehiculoRepository.createdVehiculo, isNull);
   });
 
   testWidgets('formulario de vehículo no guarda si solo se escribe un nombre parcial sin seleccionar', (
