@@ -165,8 +165,11 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     ),
                     onChanged: (value) {
                       _clienteQuery = value;
+                      final normalizedValue = value.trim().toLowerCase();
+                      final normalizedSelectedName =
+                          selectedCliente?.nombreCompleto.trim().toLowerCase();
                       final matchesSelected =
-                          selectedCliente != null && value.trim() == selectedCliente.nombreCompleto;
+                          normalizedSelectedName != null && normalizedValue == normalizedSelectedName;
                       if (!matchesSelected && _selectedClienteId != null) {
                         setState(() => _selectedClienteId = null);
                       }
