@@ -29,7 +29,7 @@ class FeaturePlaceholder extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 34,
-                backgroundColor: AppColors.primary.withOpacity(0.12),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                 child: Icon(icon, size: 34, color: AppColors.primary),
               ),
               const SizedBox(height: AppSpacing.md),

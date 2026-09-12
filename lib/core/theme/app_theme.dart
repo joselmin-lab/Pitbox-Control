@@ -22,15 +22,15 @@ class AppTheme {
       ),
     );
 
-    final stateOverlay = MaterialStateProperty.resolveWith<Color?>((states) {
-      if (states.contains(MaterialState.pressed)) {
-        return AppColors.primary.withOpacity(0.20);
+    final stateOverlay = WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.pressed)) {
+        return AppColors.primary.withValues(alpha: 0.20);
       }
-      if (states.contains(MaterialState.hovered)) {
-        return AppColors.primary.withOpacity(0.10);
+      if (states.contains(WidgetState.hovered)) {
+        return AppColors.primary.withValues(alpha: 0.10);
       }
-      if (states.contains(MaterialState.focused)) {
-        return AppColors.primary.withOpacity(0.14);
+      if (states.contains(WidgetState.focused)) {
+        return AppColors.primary.withValues(alpha: 0.14);
       }
       return null;
     });
@@ -53,33 +53,33 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          padding: const MaterialStatePropertyAll(
+          padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           ),
-          backgroundColor: const MaterialStatePropertyAll(AppColors.primary),
-          foregroundColor: const MaterialStatePropertyAll(Colors.white),
+          backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
+          foregroundColor: const WidgetStatePropertyAll(Colors.white),
           overlayColor: stateOverlay,
-          shape: MaterialStatePropertyAll(
+          shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.sm)),
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
-          padding: const MaterialStatePropertyAll(
+          padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           ),
-          foregroundColor: const MaterialStatePropertyAll(AppColors.textPrimary),
+          foregroundColor: const WidgetStatePropertyAll(AppColors.textPrimary),
           overlayColor: stateOverlay,
-          side: const MaterialStatePropertyAll(BorderSide(color: AppColors.border)),
-          shape: MaterialStatePropertyAll(
+          side: const WidgetStatePropertyAll(BorderSide(color: AppColors.border)),
+          shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.sm)),
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
-          foregroundColor: const MaterialStatePropertyAll(AppColors.primary),
+          foregroundColor: const WidgetStatePropertyAll(AppColors.primary),
           overlayColor: stateOverlay,
         ),
       ),
