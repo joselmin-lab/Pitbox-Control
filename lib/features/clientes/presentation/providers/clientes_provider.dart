@@ -88,13 +88,32 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
   }
 
   Future<void> delete(String clienteId) async {
-    // Se aplica borrado en cascada y solo se refresca UI después de completar ambas operaciones.
     final clienteRepository = ref.read(clienteRepositoryProvider);
     final vehiculoRepository = ref.read(vehiculoRepositoryProvider);
-    await clienteRepository.delete(clienteId);
-    await vehiculoRepository.deleteByClienteId(clienteId);
-    await ref.read(vehiculosProvider.notifier).reload();
-    await reload();
+
+    final clienteSnapshot = await clienteRepository.getById(clienteId);
+    final vehiculosSnapshot = await vehiculoRepository.getByClienteId(clienteId);
+
+    try {
+      // Se eliminan vehículos primero para evitar dejar huérfanos si falla el segundo paso.
+      await vehiculoRepository.deleteByClienteId(clienteId);
+      await clienteRepository.delete(clienteId);
+    } catch (_) {
+      // En caso de error, se restaura el estado previo en memoria.
+      if (clienteSnapshot != null && await clienteRepository.getById(clienteId) == null) {
+        await clienteRepository.create(clienteSnapshot);
+      }
+      final remainingVehiculos = await vehiculoRepository.getByClienteId(clienteId);
+      if (remainingVehiculos.isEmpty && vehiculosSnapshot.isNotEmpty) {
+        for (final vehiculo in vehiculosSnapshot) {
+          await vehiculoRepository.create(vehiculo);
+        }
+      }
+      rethrow;
+    } finally {
+      await ref.read(vehiculosProvider.notifier).reload();
+      await reload();
+    }
   }
 
   String? _optional(String? value) {

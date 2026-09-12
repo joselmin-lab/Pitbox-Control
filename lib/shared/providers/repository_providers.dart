@@ -5,13 +5,10 @@ import '../../features/clientes/domain/repositories/cliente_repository.dart';
 import '../../features/vehiculos/data/repositories/in_memory_vehiculo_repository.dart';
 import '../../features/vehiculos/domain/repositories/vehiculo_repository.dart';
 
-final InMemoryClienteRepository _clienteRepository = InMemoryClienteRepository();
-final InMemoryVehiculoRepository _vehiculoRepository = InMemoryVehiculoRepository();
-
 final clienteRepositoryProvider = Provider<ClienteRepository>((ref) {
-  return _clienteRepository;
+  return InMemoryClienteRepository();
 });
 
 final vehiculoRepositoryProvider = Provider<VehiculoRepository>((ref) {
-  return _vehiculoRepository;
+  return InMemoryVehiculoRepository();
 });

@@ -45,7 +45,10 @@ class ClienteDetailScreen extends ConsumerWidget {
               AppPrimaryButton(
                 label: 'Agregar vehículo',
                 icon: Icons.directions_car_filled_rounded,
-                onPressed: () => context.go('/vehiculos/nuevo?clienteId=${cliente.id}'),
+                onPressed: () {
+                  final encodedClienteId = Uri.encodeQueryComponent(cliente.id);
+                  context.go('/vehiculos/nuevo?clienteId=$encodedClienteId');
+                },
               ),
             ],
           ),

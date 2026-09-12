@@ -16,18 +16,26 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final totalClientes = ref.watch(clientesProvider).valueOrNull?.length ?? 0;
-    final totalVehiculos = ref.watch(vehiculosProvider).valueOrNull?.length ?? 0;
+    final totalClientes = ref.watch(clientesProvider).when(
+          data: (clientes) => '${clientes.length}',
+          loading: () => '...',
+          error: (_, _) => '—',
+        );
+    final totalVehiculos = ref.watch(vehiculosProvider).when(
+          data: (vehiculos) => '${vehiculos.length}',
+          loading: () => '...',
+          error: (_, _) => '—',
+        );
     final kpis = <({String title, String value, IconData icon, bool highlight})>[
       (
         title: 'Total clientes',
-        value: '$totalClientes',
+        value: totalClientes,
         icon: Icons.people_alt_rounded,
         highlight: true,
       ),
       (
         title: 'Total vehículos',
-        value: '$totalVehiculos',
+        value: totalVehiculos,
         icon: Icons.directions_car_filled_rounded,
         highlight: false,
       ),
