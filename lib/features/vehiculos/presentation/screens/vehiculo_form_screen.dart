@@ -71,6 +71,23 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     if (clientesAsync.hasError) {
       return Center(child: Text('Error al cargar clientes: ${clientesAsync.error}'));
     }
+    if (clientes.isEmpty) {
+      return AppSectionCard(
+        title: 'No hay clientes disponibles',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Primero debes registrar un cliente para poder asociar un vehículo.'),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/clientes/nuevo'),
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('Crear cliente'),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (vehiculoId != null && vehiculo == null) {
       if (vehiculosAsync.isLoading) {

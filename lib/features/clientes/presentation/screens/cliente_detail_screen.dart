@@ -77,6 +77,14 @@ class ClienteDetailScreen extends ConsumerWidget {
                     ),
                     OutlinedButton.icon(
                       onPressed: () async {
+                        if (vehiculosAsync.isLoading) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Espera a que termine de cargar la lista de vehículos.'),
+                            ),
+                          );
+                          return;
+                        }
                         final warning = vehiculos.isNotEmpty
                             ? 'Este cliente tiene ${vehiculos.length} vehículo(s) asociado(s). Si lo eliminas, también se eliminarán esos vehículos.'
                             : '¿Seguro que deseas eliminar este cliente?';
