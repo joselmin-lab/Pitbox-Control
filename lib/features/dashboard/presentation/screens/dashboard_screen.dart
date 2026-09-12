@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/config/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../clientes/presentation/providers/clientes_provider.dart';
+import '../../../vehiculos/presentation/providers/vehiculos_provider.dart';
 import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_table.dart';
 import '../../../../shared/widgets/kpi_card.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalClientes = ref.watch(clientesProvider).valueOrNull?.length ?? 0;
+    final totalVehiculos = ref.watch(vehiculosProvider).valueOrNull?.length ?? 0;
     final kpis = <({String title, String value, IconData icon, bool highlight})>[
       (
-        title: 'Vehículos en proceso',
-        value: '8',
-        icon: Icons.directions_car_filled_rounded,
+        title: 'Total clientes',
+        value: '$totalClientes',
+        icon: Icons.people_alt_rounded,
         highlight: true,
       ),
       (
-        title: 'Trabajos del día',
-        value: '5',
-        icon: Icons.build_circle_rounded,
+        title: 'Total vehículos',
+        value: '$totalVehiculos',
+        icon: Icons.directions_car_filled_rounded,
         highlight: false,
       ),
       (
@@ -34,9 +38,9 @@ class DashboardScreen extends StatelessWidget {
         highlight: false,
       ),
       (
-        title: 'Ingresos del día',
-        value: AppConstants.formatCurrency(1250),
-        icon: Icons.attach_money_rounded,
+        title: 'Trabajos del día',
+        value: '5',
+        icon: Icons.build_circle_rounded,
         highlight: false,
       ),
     ];

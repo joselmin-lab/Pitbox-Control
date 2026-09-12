@@ -10,7 +10,8 @@ void main() {
 
     expect(find.text('Pitbox Control'), findsOneWidget);
     expect(find.text('Dashboard general'), findsOneWidget);
-    expect(find.text('Vehículos en proceso'), findsOneWidget);
+    expect(find.text('Total clientes'), findsOneWidget);
+    expect(find.text('Total vehículos'), findsOneWidget);
     expect(find.text('Nueva proforma'), findsOneWidget);
   });
 }

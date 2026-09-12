@@ -1,6 +1,6 @@
 # Pitbox Control
 
-Pitbox Control es una app multiplataforma para la gestión de talleres mecánicos. Esta **Fase 1** entrega una base de interfaz en Flutter con navegación modular, dashboard inicial y preparación para integrar Supabase en fases posteriores.
+Pitbox Control es una app multiplataforma para la gestión de talleres mecánicos. Esta versión incluye **Fase 1 + Fase 2**: base de interfaz modular y módulos funcionales de **Clientes** y **Vehículos** con relación **1:N**.
 
 ## Stack técnico
 
@@ -95,17 +95,19 @@ main.dart
 - **Modular por features**: cada módulo del taller está aislado por carpeta y preparado para evolucionar con capas `presentation`, `domain` y `data`.
 - **Supabase preparado**: se agregó `supabase_flutter` y se dejó un scaffold seguro con placeholders para URL y anon key, sin conexión real en esta fase.
 
-## Alcance de la Fase 1
+## Alcance implementado (Fase 1 + Fase 2)
 
 - AppBar con branding simple.
 - Sidebar colapsable en pantallas anchas.
 - Drawer en móvil.
-- Dashboard inicial con KPI mock estáticos.
-- Placeholders por módulo con estilo consistente.
+- Dashboard con KPIs mixtos (totales reales de clientes/vehículos + mocks de módulos pendientes).
+- Módulo Clientes funcional: listado, búsqueda, alta, edición, detalle y eliminación.
+- Módulo Vehículos funcional: listado, búsqueda, alta, edición, detalle y eliminación.
+- Relación 1:N Cliente → Vehículos en detalle de cliente.
 - Tema global claro con paleta rojo/negro, espaciados y estados interactivos.
 - Componentes reutilizables: botones, cards, badges y tabla.
 
-## Checklist de validación Fase 1
+## Checklist de validación Fase 1 + Fase 2
 
 - [x] Proyecto base Flutter preparado para Android, iOS y Web.
 - [x] Dependencias agregadas: Riverpod, go_router y supabase_flutter.
@@ -117,13 +119,22 @@ main.dart
 - [x] Tema global centralizado y constantes reutilizables.
 - [x] Scaffolding de Supabase sin credenciales reales.
 - [x] README documentado en español.
+- [x] CRUD de Clientes con validaciones y búsqueda.
+- [x] CRUD de Vehículos con validaciones y selector de cliente.
+- [x] Relación 1:N (un cliente con varios vehículos) visible en detalle de cliente.
+- [x] Navegación completa para crear/editar/ver detalle de clientes y vehículos.
+- [x] KPIs de dashboard para totales reales en memoria.
+
+## Repositorio en memoria (temporal antes de Supabase real)
+
+En esta fase, los módulos de Clientes y Vehículos usan repositorios en memoria (`InMemoryClienteRepository` e `InMemoryVehiculoRepository`) con datos semilla para pruebas rápidas.
+
+La capa de presentación consume contratos (`ClienteRepository`, `VehiculoRepository`) vía Riverpod, por lo que en una fase futura se puede reemplazar la implementación en memoria por una implementación Supabase sin cambiar widgets ni rutas.
 
 ## Siguiente fase recomendada
 
-Implementar **Clientes + Vehículos** con relación **1:N**. Esto implicará:
+Conectar repositorios a **Supabase real** y habilitar módulos de **Proformas + Trabajos**:
 
-- Modelos de dominio (`Cliente`, `Vehiculo`) y validaciones.
-- Repositorios y fuentes de datos con Supabase.
-- Formularios de alta/edición.
-- Listados filtrables y navegación entre cliente y sus vehículos.
-- Primera relación real entre módulos con estructura lista para crecer.
+- Reemplazar repositorios en memoria por implementaciones Supabase respetando los mismos contratos de dominio.
+- Persistir relación Cliente-Vehículo en base de datos y sincronizar formularios/listados.
+- Implementar flujo operativo Proforma → Trabajo con estados y trazabilidad.
