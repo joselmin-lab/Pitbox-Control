@@ -6,7 +6,7 @@ class AppDataTable extends StatelessWidget {
   const AppDataTable({
     required this.columns,
     required this.rows,
-    this.showCheckboxColumn = false,
+    this.showCheckboxColumn = true,
     super.key,
   });
 
