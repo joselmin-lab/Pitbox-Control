@@ -1,36 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../clientes/presentation/providers/clientes_provider.dart';
+import '../../../vehiculos/presentation/providers/vehiculos_provider.dart';
 import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_table.dart';
 import '../../../../shared/widgets/kpi_card.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalClientes = ref.watch(clientesProvider).when(
+          data: (clientes) => '${clientes.length}',
+          loading: () => '...',
+          error: (_, _) => '—',
+        );
+    final totalVehiculos = ref.watch(vehiculosProvider).when(
+          data: (vehiculos) => '${vehiculos.length}',
+          loading: () => '...',
+          error: (_, _) => '—',
+        );
     final kpis = <({String title, String value, IconData icon, bool highlight})>[
       (
-        title: 'Vehículos en proceso',
-        value: '8',
-        icon: Icons.directions_car_filled_rounded,
+        title: 'Total clientes',
+        value: totalClientes,
+        icon: Icons.people_alt_rounded,
         highlight: true,
       ),
       (
-        title: 'Trabajos del día',
-        value: '5',
-        icon: Icons.build_circle_rounded,
+        title: 'Total vehículos',
+        value: totalVehiculos,
+        icon: Icons.directions_car_filled_rounded,
         highlight: false,
       ),
       (
         title: 'Proformas pendientes',
         value: '3',
         icon: Icons.receipt_long_rounded,
+        highlight: false,
+      ),
+      (
+        title: 'Trabajos del día',
+        value: '5',
+        icon: Icons.build_circle_rounded,
         highlight: false,
       ),
       (
@@ -110,7 +129,7 @@ class DashboardScreen extends StatelessWidget {
               LayoutBuilder(
                 builder: (context, gridConstraints) {
                   final crossAxisCount = gridConstraints.maxWidth >= 1200
-                      ? 4
+                      ? 5
                       : gridConstraints.maxWidth >= 700
                           ? 2
                           : 1;
