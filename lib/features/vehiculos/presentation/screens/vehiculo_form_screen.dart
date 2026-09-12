@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../clientes/domain/models/cliente.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
 import '../providers/vehiculos_provider.dart';
 
@@ -31,6 +32,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
   final _colorController = TextEditingController();
   final _kilometrajeController = TextEditingController();
 
+  String _clienteQuery = '';
   String? _selectedClienteId;
   bool _initialized = false;
   bool _saving = false;
@@ -62,7 +64,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     final clientesAsync = ref.watch(clientesProvider);
     final clientes = clientesAsync.maybeWhen(
       data: (value) => value,
-      orElse: () => const [],
+      orElse: () => const <Cliente>[],
     );
 
     if (clientesAsync.isLoading) {
@@ -107,12 +109,22 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
       _colorController.text = vehiculo?.color ?? '';
       _kilometrajeController.text = vehiculo?.kilometraje?.toString() ?? '';
       _selectedClienteId = vehiculo?.clienteId ?? widget.clienteId;
+      _clienteQuery = '';
+      for (final cliente in clientes) {
+        if (cliente.id == _selectedClienteId) {
+          _clienteQuery = cliente.nombreCompleto;
+          break;
+        }
+      }
       _initialized = true;
     }
 
     final isEdit = vehiculo != null;
     final clienteIds = clientes.map((item) => item.id).toSet();
     final selectedClienteId = clienteIds.contains(_selectedClienteId) ? _selectedClienteId : null;
+    final selectedCliente = selectedClienteId == null
+        ? null
+        : clientes.firstWhere((item) => item.id == selectedClienteId);
 
     return SingleChildScrollView(
       child: AppSectionCard(
@@ -122,20 +134,51 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DropdownButtonFormField<String>(
-                value: selectedClienteId,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Cliente asociado *'),
-                items: [
-                  for (final cliente in clientes)
-                    DropdownMenuItem(value: cliente.id, child: Text(cliente.nombreCompleto)),
-                ],
-                onChanged: (value) => setState(() => _selectedClienteId = value),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Debes seleccionar un cliente.';
+              Autocomplete<Cliente>(
+                key: ValueKey(
+                  'cliente-autocomplete-${widget.vehiculoId ?? 'nuevo'}-${widget.clienteId ?? 'sin-cliente'}',
+                ),
+                displayStringForOption: (cliente) => cliente.nombreCompleto,
+                initialValue: TextEditingValue(text: _clienteQuery),
+                optionsBuilder: (textEditingValue) {
+                  final query = textEditingValue.text.trim().toLowerCase();
+                  if (query.isEmpty) {
+                    return clientes;
                   }
-                  return null;
+                  return clientes.where((cliente) {
+                    return cliente.nombreCompleto.toLowerCase().contains(query);
+                  });
+                },
+                onSelected: (cliente) {
+                  setState(() {
+                    _selectedClienteId = cliente.id;
+                    _clienteQuery = cliente.nombreCompleto;
+                  });
+                },
+                fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                  return TextFormField(
+                    controller: textEditingController,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(
+                      labelText: 'Cliente asociado *',
+                      hintText: 'Buscar cliente por nombre',
+                    ),
+                    onChanged: (value) {
+                      _clienteQuery = value;
+                      final matchesSelected =
+                          selectedCliente != null && value.trim() == selectedCliente.nombreCompleto;
+                      if (!matchesSelected && _selectedClienteId != null) {
+                        setState(() => _selectedClienteId = null);
+                      }
+                    },
+                    onFieldSubmitted: (_) => onFieldSubmitted(),
+                    validator: (_) {
+                      if (_selectedClienteId == null || _selectedClienteId!.isEmpty) {
+                        return 'Debes seleccionar un cliente.';
+                      }
+                      return null;
+                    },
+                  );
                 },
               ),
               const SizedBox(height: AppSpacing.md),

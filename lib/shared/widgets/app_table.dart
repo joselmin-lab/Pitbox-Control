@@ -6,11 +6,13 @@ class AppDataTable extends StatelessWidget {
   const AppDataTable({
     required this.columns,
     required this.rows,
+    this.showCheckboxColumn = false,
     super.key,
   });
 
   final List<DataColumn> columns;
   final List<DataRow> rows;
+  final bool showCheckboxColumn;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,7 @@ class AppDataTable extends StatelessWidget {
         dataRowMaxHeight: 64,
         horizontalMargin: AppSpacing.sm,
         columnSpacing: AppSpacing.lg,
+        showCheckboxColumn: showCheckboxColumn,
         columns: columns,
         rows: rows,
       ),
