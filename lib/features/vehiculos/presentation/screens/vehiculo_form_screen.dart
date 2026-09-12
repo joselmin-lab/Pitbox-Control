@@ -143,13 +143,13 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     focusNode: _clienteFocusNode,
                     optionsBuilder: (textEditingValue) {
                       final query = textEditingValue.text.trim().toLowerCase();
+                      if (_showAllClienteSuggestions) {
+                        return clientes;
+                      }
                       if (query.isNotEmpty) {
                         return clientes.where((cliente) {
                           return cliente.nombreCompleto.toLowerCase().contains(query);
                         });
-                      }
-                      if (_showAllClienteSuggestions) {
-                        return clientes;
                       }
                       return const <Cliente>[];
                     },
@@ -185,7 +185,9 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                           ),
                         ),
                         onChanged: (value) {
-                          _showAllClienteSuggestions = false;
+                          if (_showAllClienteSuggestions) {
+                            setState(() => _showAllClienteSuggestions = false);
+                          }
                           final exactCliente = _findClienteByExactName(clientes, value);
                           final currentSelectedCliente = _findClienteById(clientes, _selectedClienteId);
                           final normalizedValue = _normalizeClienteValue(value);
