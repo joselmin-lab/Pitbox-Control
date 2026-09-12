@@ -80,9 +80,10 @@ class InMemoryVehiculoRepository implements VehiculoRepository {
 
   @override
   Future<Vehiculo> create(Vehiculo vehiculo) async {
+    final shouldGenerateId = vehiculo.id.isEmpty;
     final entity = vehiculo.copyWith(
-      id: vehiculo.id.isEmpty ? _newId() : vehiculo.id,
-      fechaRegistro: DateTime.now(),
+      id: shouldGenerateId ? _newId() : vehiculo.id,
+      fechaRegistro: shouldGenerateId ? DateTime.now() : vehiculo.fechaRegistro,
     );
     _vehiculos.add(entity);
     return entity;

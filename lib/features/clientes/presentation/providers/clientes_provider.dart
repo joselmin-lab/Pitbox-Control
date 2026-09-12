@@ -40,7 +40,6 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
   }
 
   Future<void> reload() async {
-    state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => ref.read(clienteRepositoryProvider).getAll());
   }
 
@@ -89,9 +88,12 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
   }
 
   Future<void> delete(String clienteId) async {
-    // Se borra en cascada en memoria para mantener consistente la relación 1:N.
-    await ref.read(vehiculosProvider.notifier).deleteByClienteId(clienteId);
-    await ref.read(clienteRepositoryProvider).delete(clienteId);
+    // Se aplica borrado en cascada y solo se refresca UI después de completar ambas operaciones.
+    final clienteRepository = ref.read(clienteRepositoryProvider);
+    final vehiculoRepository = ref.read(vehiculoRepositoryProvider);
+    await clienteRepository.delete(clienteId);
+    await vehiculoRepository.deleteByClienteId(clienteId);
+    await ref.read(vehiculosProvider.notifier).reload();
     await reload();
   }
 

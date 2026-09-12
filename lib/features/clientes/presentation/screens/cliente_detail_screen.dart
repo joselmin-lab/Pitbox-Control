@@ -113,7 +113,11 @@ class ClienteDetailScreen extends ConsumerWidget {
                     rows: [
                       for (final vehiculo in vehiculos)
                         DataRow(
-                          onSelectChanged: (_) => context.go('/vehiculos/${vehiculo.id}'),
+                          onSelectChanged: (selected) {
+                            if (selected == true) {
+                              context.go('/vehiculos/${vehiculo.id}');
+                            }
+                          },
                           cells: [
                             DataCell(Text(vehiculo.placa)),
                             DataCell(Text(vehiculo.marca)),

@@ -56,9 +56,10 @@ class InMemoryClienteRepository implements ClienteRepository {
 
   @override
   Future<Cliente> create(Cliente cliente) async {
+    final shouldGenerateId = cliente.id.isEmpty;
     final entity = cliente.copyWith(
-      id: cliente.id.isEmpty ? _newId() : cliente.id,
-      fechaRegistro: DateTime.now(),
+      id: shouldGenerateId ? _newId() : cliente.id,
+      fechaRegistro: shouldGenerateId ? DateTime.now() : cliente.fechaRegistro,
     );
     _clientes.add(entity);
     return entity;

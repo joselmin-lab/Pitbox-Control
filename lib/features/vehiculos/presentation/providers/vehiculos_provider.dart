@@ -46,7 +46,6 @@ class VehiculosNotifier extends AsyncNotifier<List<Vehiculo>> {
   }
 
   Future<void> reload() async {
-    state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => ref.read(vehiculoRepositoryProvider).getAll());
   }
 
