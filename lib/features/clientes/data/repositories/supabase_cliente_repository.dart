@@ -45,7 +45,12 @@ class SupabaseClienteRepository implements ClienteRepository {
   @override
   Future<Cliente> update(Cliente cliente) async {
     try {
-      final row = await _client.from('clientes').update(_toUpdatePayload(cliente)).eq('id', cliente.id).select().maybeSingle();
+      final row = await _client
+          .from('clientes')
+          .update(_toUpdatePayload(cliente))
+          .eq('id', cliente.id)
+          .select()
+          .maybeSingle();
       if (row == null) {
         throw StateError('Cliente no encontrado: ${cliente.id}');
       }
@@ -58,7 +63,10 @@ class SupabaseClienteRepository implements ClienteRepository {
   @override
   Future<void> delete(String id) async {
     try {
-      await _client.from('clientes').delete().eq('id', id);
+      final deleted = await _client.from('clientes').delete().eq('id', id).select('id').maybeSingle();
+      if (deleted == null) {
+        throw StateError('Cliente no encontrado: $id');
+      }
     } on PostgrestException catch (error) {
       throw StateError('No se pudo eliminar el cliente $id: ${error.message}');
     }
@@ -99,7 +107,6 @@ class SupabaseClienteRepository implements ClienteRepository {
       'telefono': cliente.telefono,
       'email': cliente.email,
       'direccion': cliente.direccion,
-      'fecha_registro': cliente.fechaRegistro.toUtc().toIso8601String(),
     };
   }
 

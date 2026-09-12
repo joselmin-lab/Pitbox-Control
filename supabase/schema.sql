@@ -1,5 +1,7 @@
 -- Este script debe ejecutarse manualmente en el SQL Editor de tu proyecto Supabase.
 -- No se ejecuta automáticamente desde esta app Flutter.
+-- IMPORTANTE: Las políticas definidas aquí son permisivas para fase sin autenticación.
+-- Antes de producción, reemplazarlas por políticas por usuario/rol con auth habilitada.
 
 create extension if not exists pgcrypto;
 

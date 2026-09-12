@@ -8,7 +8,11 @@ import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await const SupabaseService().initialize();
+  try {
+    await const SupabaseService().initialize();
+  } catch (error) {
+    debugPrint('No se pudo inicializar Supabase: $error');
+  }
   runApp(const ProviderScope(child: PitboxControlApp()));
 }
 

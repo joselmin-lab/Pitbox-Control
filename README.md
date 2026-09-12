@@ -140,6 +140,8 @@ Las credenciales del proyecto (URL y anon key) ya están configuradas en:
 
 - `lib/core/config/supabase_config.dart`
 
+> Recomendación para producción: mover estas credenciales a `--dart-define` o `.env`.
+
 La app inicializa Supabase en `main.dart` y los providers inyectan repositorios reales:
 
 - `SupabaseClienteRepository`

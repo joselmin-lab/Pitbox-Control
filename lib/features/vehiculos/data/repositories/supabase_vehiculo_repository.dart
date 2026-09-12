@@ -76,7 +76,10 @@ class SupabaseVehiculoRepository implements VehiculoRepository {
   @override
   Future<void> delete(String id) async {
     try {
-      await _client.from('vehiculos').delete().eq('id', id);
+      final deleted = await _client.from('vehiculos').delete().eq('id', id).select('id').maybeSingle();
+      if (deleted == null) {
+        throw StateError('Vehículo no encontrado: $id');
+      }
     } on PostgrestException catch (error) {
       throw StateError('No se pudo eliminar el vehículo $id: ${error.message}');
     }
@@ -131,7 +134,6 @@ class SupabaseVehiculoRepository implements VehiculoRepository {
       'anio': vehiculo.anio,
       'color': vehiculo.color,
       'kilometraje': vehiculo.kilometraje,
-      'fecha_registro': vehiculo.fechaRegistro.toUtc().toIso8601String(),
     };
   }
 
