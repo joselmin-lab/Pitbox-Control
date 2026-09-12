@@ -237,12 +237,20 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                                   itemCount: options.length,
                                   itemBuilder: (context, index) {
                                     final cliente = options.elementAt(index);
+                                    final isHighlighted =
+                                        AutocompleteHighlightedOption.of(context) == index;
                                     return Semantics(
                                       button: true,
                                       label: 'Seleccionar cliente ${cliente.nombreCompleto}',
-                                      child: ListTile(
-                                        title: Text(cliente.nombreCompleto),
-                                        onTap: () => onSelected(cliente),
+                                      child: Material(
+                                        color: isHighlighted
+                                            ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                            : Colors.transparent,
+                                        child: ListTile(
+                                          selected: isHighlighted,
+                                          title: Text(cliente.nombreCompleto),
+                                          onTap: () => onSelected(cliente),
+                                        ),
                                       ),
                                     );
                                   },

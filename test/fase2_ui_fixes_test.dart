@@ -41,6 +41,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+    final scrollable = find.descendant(
+      of: find.byType(AppSectionCard),
+      matching: find.byType(Scrollable),
+    );
+    expect(scrollable, findsOneWidget);
+
+    final initialOffset = tester.state<ScrollableState>(scrollable).position.pixels;
+    await tester.drag(scrollable, const Offset(0, -120));
+    await tester.pump();
+
+    expect(tester.state<ScrollableState>(scrollable).position.pixels, greaterThan(initialOffset));
   });
 
   testWidgets('detalle de cliente no muestra checkbox de selección en tabla de vehículos', (tester) async {
@@ -221,6 +232,53 @@ void main() {
 
     expect(vehiculoRepository.createdVehiculo?.clienteId, MockIds.clienteAna);
     expect(find.text('Vehículos'), findsOneWidget);
+  });
+
+  testWidgets('formulario de vehículo no guarda si solo se escribe un nombre parcial sin seleccionar', (
+    tester,
+  ) async {
+    final clienteRepository = _TestClienteRepository([
+      Cliente(
+        id: MockIds.clienteAna,
+        nombre: 'Ana',
+        apellido: 'Rojas',
+        telefono: '70012345',
+        fechaRegistro: DateTime(2026, 1, 10),
+      ),
+      Cliente(
+        id: MockIds.clienteMaria,
+        nombre: 'María',
+        apellido: 'López',
+        telefono: '73456789',
+        fechaRegistro: DateTime(2026, 3, 4),
+      ),
+    ]);
+    final vehiculoRepository = _RecordingVehiculoRepository();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clienteRepositoryProvider.overrideWithValue(clienteRepository),
+          vehiculoRepositoryProvider.overrideWithValue(vehiculoRepository),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: VehiculoFormScreen()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'Ana');
+    await tester.enterText(find.byType(TextFormField).at(1), 'XYZ-777');
+    await tester.enterText(find.byType(TextFormField).at(2), 'Mazda');
+    await tester.enterText(find.byType(TextFormField).at(3), '2');
+    await tester.enterText(find.byType(TextFormField).at(4), '2022');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Debes seleccionar un cliente.'), findsOneWidget);
+    expect(vehiculoRepository.createdVehiculo, isNull);
   });
 }
 
