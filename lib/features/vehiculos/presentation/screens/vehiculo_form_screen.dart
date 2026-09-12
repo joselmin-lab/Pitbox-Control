@@ -207,6 +207,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                         },
                         onFieldSubmitted: (_) {
                           _applyResolvedClienteSelection(
+                            clientes,
                             _findClienteByExactName(clientes, textEditingController.text),
                           );
                           onFieldSubmitted();
@@ -347,6 +348,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                         ? null
                         : () async {
                             _applyResolvedClienteSelection(
+                              clientes,
                               _findClienteByExactName(clientes, _clienteController.text),
                             );
                             if (!_formKey.currentState!.validate()) {
@@ -445,13 +447,21 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     );
   }
 
-  void _applyResolvedClienteSelection(Cliente? cliente) {
+  void _applyResolvedClienteSelection(List<Cliente> clientes, Cliente? cliente) {
+    final previousSelectedCliente = _findClienteById(clientes, _selectedClienteId);
+    final shouldClearField = cliente == null &&
+        previousSelectedCliente != null &&
+        _normalizeClienteValue(_clienteController.text) ==
+            _normalizeClienteValue(previousSelectedCliente.nombreCompleto);
+
     setState(() {
       _showAllClienteSuggestions = false;
       _selectedClienteId = cliente?.id;
     });
     if (cliente != null) {
       _setClienteFieldText(cliente.nombreCompleto);
+    } else if (shouldClearField) {
+      _setClienteFieldText('');
     }
   }
 
