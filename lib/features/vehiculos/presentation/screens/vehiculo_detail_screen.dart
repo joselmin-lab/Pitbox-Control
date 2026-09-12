@@ -24,6 +24,9 @@ class VehiculoDetailScreen extends ConsumerWidget {
       if (vehiculosAsync.isLoading) {
         return const Center(child: CircularProgressIndicator());
       }
+      if (vehiculosAsync.hasError) {
+        return Center(child: Text('Error al cargar vehículo: ${vehiculosAsync.error}'));
+      }
       return const Center(child: Text('Vehículo no encontrado.'));
     }
 

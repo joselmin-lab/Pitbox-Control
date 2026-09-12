@@ -68,10 +68,16 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     if (clientesAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (clientesAsync.hasError) {
+      return Center(child: Text('Error al cargar clientes: ${clientesAsync.error}'));
+    }
 
     if (vehiculoId != null && vehiculo == null) {
       if (vehiculosAsync.isLoading) {
         return const Center(child: CircularProgressIndicator());
+      }
+      if (vehiculosAsync.hasError) {
+        return Center(child: Text('Error al cargar vehículo: ${vehiculosAsync.error}'));
       }
       return const Center(child: Text('Vehículo no encontrado.'));
     }

@@ -25,6 +25,9 @@ class ClienteDetailScreen extends ConsumerWidget {
       if (clientesAsync.isLoading) {
         return const Center(child: CircularProgressIndicator());
       }
+      if (clientesAsync.hasError) {
+        return Center(child: Text('Error al cargar cliente: ${clientesAsync.error}'));
+      }
       return const Center(child: Text('Cliente no encontrado.'));
     }
 

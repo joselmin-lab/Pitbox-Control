@@ -80,6 +80,59 @@ void main() {
     expect(container.read(clienteByIdProvider(cliente.id)), isNotNull);
     expect(container.read(vehiculosByClienteIdProvider(cliente.id)), isNotEmpty);
   });
+
+  test('repone vehículos faltantes si la eliminación falla de forma parcial', () async {
+    final cliente = Cliente(
+      id: 'cli-partial',
+      nombre: 'Prueba',
+      apellido: 'Parcial',
+      telefono: '75555555',
+      fechaRegistro: DateTime(2026, 1, 1),
+    );
+    final vehiculoA = Vehiculo(
+      id: 'veh-partial-a',
+      clienteId: 'cli-partial',
+      placa: 'PART-001',
+      marca: 'Toyota',
+      modelo: 'Yaris',
+      anio: 2019,
+      fechaRegistro: DateTime(2026, 1, 1),
+    );
+    final vehiculoB = Vehiculo(
+      id: 'veh-partial-b',
+      clienteId: 'cli-partial',
+      placa: 'PART-002',
+      marca: 'Kia',
+      modelo: 'Picanto',
+      anio: 2021,
+      fechaRegistro: DateTime(2026, 1, 1),
+    );
+
+    final clienteRepository = _MemoryClienteRepository(seed: [cliente]);
+    final vehiculoRepository = _PartialFailVehiculoRepository(seed: [vehiculoA, vehiculoB]);
+
+    final container = ProviderContainer(
+      overrides: [
+        clienteRepositoryProvider.overrideWithValue(clienteRepository),
+        vehiculoRepositoryProvider.overrideWithValue(vehiculoRepository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(clientesProvider.future);
+    await container.read(vehiculosProvider.future);
+
+    await expectLater(
+      container.read(clientesProvider.notifier).delete(cliente.id),
+      throwsA(isA<StateError>()),
+    );
+
+    final clienteActual = container.read(clienteByIdProvider(cliente.id));
+    final vehiculosActuales = container.read(vehiculosByClienteIdProvider(cliente.id));
+
+    expect(clienteActual, isNotNull);
+    expect(vehiculosActuales.map((item) => item.id).toSet(), {'veh-partial-a', 'veh-partial-b'});
+  });
 }
 
 class _FailingDeleteClienteRepository implements ClienteRepository {
@@ -92,6 +145,44 @@ class _FailingDeleteClienteRepository implements ClienteRepository {
     _clientes.removeWhere((item) => item.id == cliente.id);
     _clientes.add(cliente);
     return cliente;
+  }
+
+  class _MemoryClienteRepository implements ClienteRepository {
+    _MemoryClienteRepository({required List<Cliente> seed}) : _clientes = [...seed];
+
+    final List<Cliente> _clientes;
+
+    @override
+    Future<Cliente> create(Cliente cliente) async {
+      _clientes.removeWhere((item) => item.id == cliente.id);
+      _clientes.add(cliente);
+      return cliente;
+    }
+
+    @override
+    Future<void> delete(String id) async {
+      _clientes.removeWhere((item) => item.id == id);
+    }
+
+    @override
+    Future<List<Cliente>> getAll() async => List.unmodifiable(_clientes);
+
+    @override
+    Future<Cliente?> getById(String id) async {
+      for (final cliente in _clientes) {
+        if (cliente.id == id) {
+          return cliente;
+        }
+      }
+      return null;
+    }
+
+    @override
+    Future<Cliente> update(Cliente cliente) async {
+      final index = _clientes.indexWhere((item) => item.id == cliente.id);
+      _clientes[index] = cliente;
+      return cliente;
+    }
   }
 
   @override
@@ -131,6 +222,19 @@ class _MemoryVehiculoRepository implements VehiculoRepository {
     _vehiculos.removeWhere((item) => item.id == vehiculo.id);
     _vehiculos.add(vehiculo);
     return vehiculo;
+  }
+
+  class _PartialFailVehiculoRepository extends _MemoryVehiculoRepository {
+    _PartialFailVehiculoRepository({required List<Vehiculo> seed}) : super(seed: seed);
+
+    @override
+    Future<void> deleteByClienteId(String clienteId) async {
+      final ids = (await getByClienteId(clienteId)).map((vehiculo) => vehiculo.id).toList(growable: false);
+      if (ids.isNotEmpty) {
+        await delete(ids.first);
+      }
+      throw StateError('Fallo parcial controlado');
+    }
   }
 
   @override
