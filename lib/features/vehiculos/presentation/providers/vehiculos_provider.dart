@@ -82,7 +82,7 @@ class VehiculosNotifier extends AsyncNotifier<List<Vehiculo>> {
     await reload();
   }
 
-  Future<void> update({
+  Future<void> editarVehiculo({
     required String id,
     required DateTime fechaRegistro,
     required String clienteId,

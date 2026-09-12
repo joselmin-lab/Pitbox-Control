@@ -228,7 +228,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                                 : int.parse(_kilometrajeController.text.trim());
                             try {
                               if (isEdit) {
-                                await ref.read(vehiculosProvider.notifier).update(
+                                await ref.read(vehiculosProvider.notifier).editarVehiculo(
                                       id: vehiculo.id,
                                       fechaRegistro: vehiculo.fechaRegistro,
                                       clienteId: _selectedClienteId!,

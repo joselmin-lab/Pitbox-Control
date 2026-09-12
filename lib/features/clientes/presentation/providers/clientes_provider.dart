@@ -66,7 +66,7 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
     await reload();
   }
 
-  Future<void> update({
+  Future<void> editarCliente({
     required String id,
     required DateTime fechaRegistro,
     required String nombre,
