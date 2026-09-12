@@ -206,7 +206,9 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                           }
                         },
                         onFieldSubmitted: (_) {
-                          _resolveClienteSelection(clientes);
+                          _applyResolvedClienteSelection(
+                            _findClienteByExactName(clientes, textEditingController.text),
+                          );
                           onFieldSubmitted();
                         },
                         validator: (_) {
@@ -344,7 +346,9 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     onPressed: _saving
                         ? null
                         : () async {
-                            _resolveClienteSelection(clientes);
+                            _applyResolvedClienteSelection(
+                              _findClienteByExactName(clientes, _clienteController.text),
+                            );
                             if (!_formKey.currentState!.validate()) {
                               return;
                             }
@@ -434,22 +438,21 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
     return null;
   }
 
-  void _resolveClienteSelection(List<Cliente> clientes) {
-    _showAllClienteSuggestions = false;
-    final exactCliente = _findClienteByExactName(clientes, _clienteController.text);
-    if (exactCliente == null) {
-      _selectedClienteId = null;
-      return;
-    }
-    _selectedClienteId = exactCliente.id;
-    _setClienteFieldText(exactCliente.nombreCompleto);
-  }
-
   void _setClienteFieldText(String value) {
     _clienteController.value = TextEditingValue(
       text: value,
       selection: TextSelection.collapsed(offset: value.length),
     );
+  }
+
+  void _applyResolvedClienteSelection(Cliente? cliente) {
+    setState(() {
+      _showAllClienteSuggestions = false;
+      _selectedClienteId = cliente?.id;
+    });
+    if (cliente != null) {
+      _setClienteFieldText(cliente.nombreCompleto);
+    }
   }
 
   void _syncClienteField(List<Cliente> clientes) {
