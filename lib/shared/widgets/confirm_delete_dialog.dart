@@ -26,14 +26,10 @@ class ConfirmDeleteDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(cancelLabel),
         ),
-        Semantics(
-          button: true,
-          label: 'Confirmar eliminación',
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmLabel),
-          ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(confirmLabel),
         ),
       ],
     );

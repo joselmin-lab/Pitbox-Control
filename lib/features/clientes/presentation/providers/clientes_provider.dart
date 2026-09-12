@@ -103,15 +103,15 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
       await clienteRepository.delete(clienteId);
     } catch (_) {
       // En caso de error, se restaura el estado previo en memoria.
+      if (await clienteRepository.getById(clienteId) == null) {
+        await clienteRepository.create(clienteSnapshot);
+      }
       final remainingVehiculos = await vehiculoRepository.getByClienteId(clienteId);
       final remainingIds = remainingVehiculos.map((vehiculo) => vehiculo.id).toSet();
       for (final vehiculo in vehiculosSnapshot) {
         if (!remainingIds.contains(vehiculo.id)) {
           await vehiculoRepository.create(vehiculo);
         }
-      }
-      if (await clienteRepository.getById(clienteId) == null) {
-        await clienteRepository.create(clienteSnapshot);
       }
       rethrow;
     } finally {
