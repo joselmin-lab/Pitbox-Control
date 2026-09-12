@@ -500,11 +500,15 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
       'ù': 'u',
       'ü': 'u',
       'û': 'u',
+      'ç': 'c',
       'ñ': 'n',
     };
 
     final normalized = StringBuffer();
     for (final rune in value.trim().toLowerCase().runes) {
+      if (rune >= 0x0300 && rune <= 0x036F) {
+        continue;
+      }
       final character = String.fromCharCode(rune);
       normalized.write(replacements[character] ?? character);
     }
