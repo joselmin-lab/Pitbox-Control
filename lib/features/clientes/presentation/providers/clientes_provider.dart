@@ -110,8 +110,12 @@ class ClientesNotifier extends AsyncNotifier<List<Cliente>> {
       for (final vehiculo in remainingVehiculos) {
         await vehiculoRepository.delete(vehiculo.id);
       }
+      final postRollbackVehiculos = await vehiculoRepository.getByClienteId(clienteId);
+      final postRollbackIds = postRollbackVehiculos.map((vehiculo) => vehiculo.id).toSet();
       for (final vehiculo in vehiculosSnapshot) {
-        await vehiculoRepository.create(vehiculo);
+        if (!postRollbackIds.contains(vehiculo.id)) {
+          await vehiculoRepository.create(vehiculo);
+        }
       }
       rethrow;
     } finally {

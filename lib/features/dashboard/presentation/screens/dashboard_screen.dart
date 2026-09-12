@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/config/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
@@ -49,6 +50,12 @@ class DashboardScreen extends ConsumerWidget {
         title: 'Trabajos del día',
         value: '5',
         icon: Icons.build_circle_rounded,
+        highlight: false,
+      ),
+      (
+        title: 'Ingresos del día',
+        value: AppConstants.formatCurrency(1250),
+        icon: Icons.attach_money_rounded,
         highlight: false,
       ),
     ];
@@ -122,7 +129,7 @@ class DashboardScreen extends ConsumerWidget {
               LayoutBuilder(
                 builder: (context, gridConstraints) {
                   final crossAxisCount = gridConstraints.maxWidth >= 1200
-                      ? 4
+                      ? 5
                       : gridConstraints.maxWidth >= 700
                           ? 2
                           : 1;
