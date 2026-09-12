@@ -165,6 +165,63 @@ void main() {
     expect(find.text('Debes seleccionar un cliente.'), findsOneWidget);
     expect(vehiculoRepository.createdVehiculo, isNull);
   });
+
+  testWidgets('formulario de vehículo acepta coincidencia única al guardar sin tocar sugerencia', (
+    tester,
+  ) async {
+    final clienteRepository = _TestClienteRepository([
+      Cliente(
+        id: MockIds.clienteAna,
+        nombre: 'Ana',
+        apellido: 'Rojas',
+        telefono: '70012345',
+        fechaRegistro: DateTime(2026, 1, 10),
+      ),
+      Cliente(
+        id: MockIds.clienteMaria,
+        nombre: 'María',
+        apellido: 'López',
+        telefono: '73456789',
+        fechaRegistro: DateTime(2026, 3, 4),
+      ),
+    ]);
+    final vehiculoRepository = _RecordingVehiculoRepository();
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: VehiculoFormScreen()),
+        ),
+        GoRoute(
+          path: '/vehiculos',
+          builder: (context, state) => const Scaffold(body: Text('Vehículos')),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clienteRepositoryProvider.overrideWithValue(clienteRepository),
+          vehiculoRepositoryProvider.overrideWithValue(vehiculoRepository),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'Ana');
+    await tester.enterText(find.byType(TextFormField).at(1), 'ABC-999');
+    await tester.enterText(find.byType(TextFormField).at(2), 'Kia');
+    await tester.enterText(find.byType(TextFormField).at(3), 'Rio');
+    await tester.enterText(find.byType(TextFormField).at(4), '2023');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(vehiculoRepository.createdVehiculo?.clienteId, MockIds.clienteAna);
+    expect(find.text('Vehículos'), findsOneWidget);
+  });
 }
 
 class _TestClienteRepository implements ClienteRepository {
