@@ -30,41 +30,45 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/clientes',
             name: 'clientes',
             builder: (context, state) => const ClientesScreen(),
-          ),
-          GoRoute(
-            path: '/clientes/nuevo',
-            name: 'clientes-nuevo',
-            builder: (context, state) => const ClienteFormScreen(),
-          ),
-          GoRoute(
-            path: '/clientes/:id',
-            name: 'clientes-detalle',
-            builder: (context, state) => ClienteDetailScreen(clienteId: state.pathParameters['id']!),
-          ),
-          GoRoute(
-            path: '/clientes/:id/editar',
-            name: 'clientes-editar',
-            builder: (context, state) => ClienteFormScreen(clienteId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'nuevo',
+                name: 'clientes-nuevo',
+                builder: (context, state) => const ClienteFormScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                name: 'clientes-detalle',
+                builder: (context, state) => ClienteDetailScreen(clienteId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: ':id/editar',
+                name: 'clientes-editar',
+                builder: (context, state) => ClienteFormScreen(clienteId: state.pathParameters['id']!),
+              ),
+            ],
           ),
           GoRoute(
             path: '/vehiculos',
             name: 'vehiculos',
             builder: (context, state) => const VehiculosScreen(),
-          ),
-          GoRoute(
-            path: '/vehiculos/nuevo',
-            name: 'vehiculos-nuevo',
-            builder: (context, state) => VehiculoFormScreen(clienteId: state.uri.queryParameters['clienteId']),
-          ),
-          GoRoute(
-            path: '/vehiculos/:id',
-            name: 'vehiculos-detalle',
-            builder: (context, state) => VehiculoDetailScreen(vehiculoId: state.pathParameters['id']!),
-          ),
-          GoRoute(
-            path: '/vehiculos/:id/editar',
-            name: 'vehiculos-editar',
-            builder: (context, state) => VehiculoFormScreen(vehiculoId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'nuevo',
+                name: 'vehiculos-nuevo',
+                builder: (context, state) => VehiculoFormScreen(clienteId: state.uri.queryParameters['clienteId']),
+              ),
+              GoRoute(
+                path: ':id',
+                name: 'vehiculos-detalle',
+                builder: (context, state) => VehiculoDetailScreen(vehiculoId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: ':id/editar',
+                name: 'vehiculos-editar',
+                builder: (context, state) => VehiculoFormScreen(vehiculoId: state.pathParameters['id']!),
+              ),
+            ],
           ),
           GoRoute(
             path: '/proformas',

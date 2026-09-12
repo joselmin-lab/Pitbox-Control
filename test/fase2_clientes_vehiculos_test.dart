@@ -173,6 +173,71 @@ void main() {
 
     expect(container.read(vehiculosByClienteIdProvider(cliente.id)), isNotEmpty);
   });
+
+  test('cliente guarda email opcional como null o valor informado', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    await container.read(clientesProvider.future);
+
+    await container.read(clientesProvider.notifier).create(
+          nombre: 'Laura',
+          apellido: 'Campos',
+          telefono: '79999999',
+          email: '',
+        );
+    var clientes = container.read(clientesProvider).value!;
+    final creado = clientes.firstWhere((item) => item.telefono == '79999999');
+    expect(creado.email, isNull);
+
+    await container.read(clientesProvider.notifier).update(
+          id: creado.id,
+          fechaRegistro: creado.fechaRegistro,
+          nombre: creado.nombre,
+          apellido: creado.apellido,
+          telefono: creado.telefono,
+          email: 'laura@correo.com',
+        );
+    clientes = container.read(clientesProvider).value!;
+    final actualizado = clientes.firstWhere((item) => item.id == creado.id);
+    expect(actualizado.email, 'laura@correo.com');
+  });
+
+  test('vehículo guarda kilometraje opcional como null o valor numérico', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    await container.read(clientesProvider.future);
+    await container.read(vehiculosProvider.future);
+
+    final clienteId = container.read(clientesProvider).value!.first.id;
+
+    await container.read(vehiculosProvider.notifier).create(
+          clienteId: clienteId,
+          placa: 'KM-0001',
+          marca: 'Chevrolet',
+          modelo: 'Onix',
+          anio: 2022,
+          kilometraje: null,
+        );
+    var vehiculos = container.read(vehiculosProvider).value!;
+    final creado = vehiculos.firstWhere((item) => item.placa == 'KM-0001');
+    expect(creado.kilometraje, isNull);
+
+    await container.read(vehiculosProvider.notifier).update(
+          id: creado.id,
+          fechaRegistro: creado.fechaRegistro,
+          clienteId: creado.clienteId,
+          placa: creado.placa,
+          marca: creado.marca,
+          modelo: creado.modelo,
+          anio: creado.anio,
+          kilometraje: 45678,
+        );
+    vehiculos = container.read(vehiculosProvider).value!;
+    final actualizado = vehiculos.firstWhere((item) => item.id == creado.id);
+    expect(actualizado.kilometraje, 45678);
+  });
 }
 
 class _FailingDeleteClienteRepository implements ClienteRepository {

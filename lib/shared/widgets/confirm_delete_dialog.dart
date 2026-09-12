@@ -19,6 +19,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      semanticLabel: '$title. Acción destructiva',
       title: Text(title),
       content: Text(message),
       actions: [
