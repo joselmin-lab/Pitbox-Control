@@ -122,6 +122,49 @@ void main() {
     expect(vehiculoRepository.createdVehiculo?.clienteId, MockIds.clienteAna);
     expect(find.text('Vehículos'), findsOneWidget);
   });
+
+  testWidgets('formulario de vehículo limpia clienteId inválido y exige una selección válida', (tester) async {
+    final clienteRepository = _TestClienteRepository([
+      Cliente(
+        id: MockIds.clienteAna,
+        nombre: 'Ana',
+        apellido: 'Rojas',
+        telefono: '70012345',
+        fechaRegistro: DateTime(2026, 1, 10),
+      ),
+    ]);
+    final vehiculoRepository = _RecordingVehiculoRepository();
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(
+            body: VehiculoFormScreen(clienteId: 'cli-inexistente'),
+          ),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clienteRepositoryProvider.overrideWithValue(clienteRepository),
+          vehiculoRepositoryProvider.overrideWithValue(vehiculoRepository),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ana Rojas'), findsNothing);
+
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Debes seleccionar un cliente.'), findsOneWidget);
+    expect(vehiculoRepository.createdVehiculo, isNull);
+  });
 }
 
 class _TestClienteRepository implements ClienteRepository {

@@ -163,15 +163,20 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                     ),
                     onChanged: (value) {
                       final exactCliente = _findClienteByExactName(clientes, value);
-                      final nextClienteId = exactCliente?.id;
                       final normalizedValue = _normalizeClienteValue(value);
                       final normalizedSelectedName =
                           _normalizeClienteValue(selectedCliente?.nombreCompleto ?? '');
-                      final matchesSelected = normalizedValue == normalizedSelectedName;
+                      final stillMatchesSelected =
+                          _selectedClienteId != null && normalizedValue == normalizedSelectedName;
 
-                      if (nextClienteId != _selectedClienteId) {
-                        setState(() => _selectedClienteId = nextClienteId);
-                      } else if (!matchesSelected && exactCliente == null && _selectedClienteId != null) {
+                      if (stillMatchesSelected) {
+                        return;
+                      }
+                      if (exactCliente != null && exactCliente.id != _selectedClienteId) {
+                        setState(() => _selectedClienteId = exactCliente.id);
+                        return;
+                      }
+                      if (exactCliente == null && _selectedClienteId != null) {
                         setState(() => _selectedClienteId = null);
                       }
                     },
@@ -192,21 +197,28 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                 optionsViewBuilder: (context, onSelected, options) {
                   return Align(
                     alignment: Alignment.topLeft,
-                    child: Material(
-                      elevation: 4,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 240, minWidth: 320),
-                        child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          shrinkWrap: true,
-                          itemCount: options.length,
-                          itemBuilder: (context, index) {
-                            final cliente = options.elementAt(index);
-                            return ListTile(
-                              title: Text(cliente.nombreCompleto),
-                              onTap: () => onSelected(cliente),
-                            );
-                          },
+                    child: Semantics(
+                      label: 'Sugerencias de clientes',
+                      child: Material(
+                        elevation: 4,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 240, minWidth: 320),
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            itemCount: options.length,
+                            itemBuilder: (context, index) {
+                              final cliente = options.elementAt(index);
+                              return Semantics(
+                                button: true,
+                                label: 'Seleccionar cliente ${cliente.nombreCompleto}',
+                                child: ListTile(
+                                  title: Text(cliente.nombreCompleto),
+                                  onTap: () => onSelected(cliente),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
