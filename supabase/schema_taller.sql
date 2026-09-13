@@ -39,5 +39,10 @@ drop policy if exists "Permitir insercion publica taller_info" on taller_info;
 drop policy if exists "Permitir actualizacion publica taller_info" on taller_info;
 
 create policy "Permitir lectura publica taller_info" on taller_info for select using (true);
-create policy "Permitir insercion publica taller_info" on taller_info for insert with check (true);
-create policy "Permitir actualizacion publica taller_info" on taller_info for update using (true);
+create policy "Permitir insercion publica taller_info" on taller_info
+  for insert
+  with check (id = '00000000-0000-0000-0000-000000000001');
+create policy "Permitir actualizacion publica taller_info" on taller_info
+  for update
+  using (id = '00000000-0000-0000-0000-000000000001')
+  with check (id = '00000000-0000-0000-0000-000000000001');

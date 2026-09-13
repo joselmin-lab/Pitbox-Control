@@ -32,16 +32,21 @@ class AppShell extends ConsumerWidget {
         title: Row(
           children: [
             if (mostrarLogo)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Image.network(
-                  logoUrl,
-                  width: 24,
-                  height: 24,
-                  cacheWidth: 48,
-                  cacheHeight: 48,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.precision_manufacturing_rounded),
+              Semantics(
+                label: 'Logo del taller',
+                image: true,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.network(
+                    logoUrl,
+                    width: 24,
+                    height: 24,
+                    cacheWidth: 48,
+                    cacheHeight: 48,
+                    fit: BoxFit.cover,
+                    excludeFromSemantics: true,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.precision_manufacturing_rounded),
+                  ),
                 ),
               )
             else

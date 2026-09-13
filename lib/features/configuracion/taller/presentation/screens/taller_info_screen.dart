@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../shared/widgets/app_button.dart';
 import '../../../../../shared/widgets/app_card.dart';
+import '../../domain/models/taller_info.dart';
+import '../../domain/utils/logo_image_validator.dart';
 import '../providers/taller_info_provider.dart';
 
 class TallerInfoScreen extends ConsumerStatefulWidget {
@@ -21,12 +23,28 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
   final _telefonoController = TextEditingController();
   final _correoController = TextEditingController();
 
+  DateTime? _lastSyncedAt;
   bool _initialized = false;
+  bool _isDirty = false;
+  bool _isSyncingControllers = false;
   bool _saving = false;
   bool _uploadingLogo = false;
 
   @override
+  void initState() {
+    super.initState();
+    _nombreController.addListener(_markDirtyOnUserEdit);
+    _direccionController.addListener(_markDirtyOnUserEdit);
+    _telefonoController.addListener(_markDirtyOnUserEdit);
+    _correoController.addListener(_markDirtyOnUserEdit);
+  }
+
+  @override
   void dispose() {
+    _nombreController.removeListener(_markDirtyOnUserEdit);
+    _direccionController.removeListener(_markDirtyOnUserEdit);
+    _telefonoController.removeListener(_markDirtyOnUserEdit);
+    _correoController.removeListener(_markDirtyOnUserEdit);
     _nombreController.dispose();
     _direccionController.dispose();
     _telefonoController.dispose();
@@ -39,15 +57,12 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
     final tallerInfoAsync = ref.watch(tallerInfoProvider);
     final tallerInfo = tallerInfoAsync.valueOrNull;
 
-    if (tallerInfo != null && !_initialized) {
-      _nombreController.text = tallerInfo.nombre;
-      _direccionController.text = tallerInfo.direccion ?? '';
-      _telefonoController.text = tallerInfo.telefono ?? '';
-      _correoController.text = tallerInfo.correo ?? '';
-      _initialized = true;
+    final canResync = !_initialized || (!_isDirty && _lastSyncedAt != tallerInfo?.fechaActualizacion);
+    if (tallerInfo != null && canResync) {
+      _syncControllersFromInfo(tallerInfo);
     }
 
-    if (tallerInfoAsync.isLoading && !_initialized) {
+    if (tallerInfoAsync.isLoading && tallerInfo == null) {
       return const Center(child: CircularProgressIndicator());
     }
     if (tallerInfoAsync.hasError && tallerInfo == null) {
@@ -136,6 +151,7 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
                                 telefono: _telefonoController.text,
                                 correo: _correoController.text,
                               );
+                          _isDirty = false;
                           if (!context.mounted) {
                             return;
                           }
@@ -190,7 +206,14 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
       );
       return;
     }
-    if (!_isValidImageContent(bytes, extension)) {
+    final imageType = detectLogoImageType(bytes);
+    final extensionMatchesType = switch (imageType) {
+      LogoImageType.png => doesLogoExtensionMatchType(extension, LogoImageType.png),
+      LogoImageType.jpeg => doesLogoExtensionMatchType(extension, LogoImageType.jpeg),
+      LogoImageType.webp => doesLogoExtensionMatchType(extension, LogoImageType.webp),
+      null => false,
+    };
+    if (!extensionMatchesType) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('El archivo no contiene una imagen válida.')),
       );
@@ -220,37 +243,25 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
       if (mounted) {
         setState(() => _uploadingLogo = false);
       }
-
-      bool _isValidImageContent(List<int> bytes, String extension) {
-        if (extension == 'png') {
-          return _startsWith(bytes, const [0x89, 0x50, 0x4E, 0x47]);
-        }
-        if (extension == 'jpg' || extension == 'jpeg') {
-          return _startsWith(bytes, const [0xFF, 0xD8, 0xFF]);
-        }
-        if (extension == 'webp') {
-          return _startsWith(bytes, const [0x52, 0x49, 0x46, 0x46]) &&
-              bytes.length > 11 &&
-              bytes[8] == 0x57 &&
-              bytes[9] == 0x45 &&
-              bytes[10] == 0x42 &&
-              bytes[11] == 0x50;
-        }
-        return false;
-      }
-
-      bool _startsWith(List<int> bytes, List<int> signature) {
-        if (bytes.length < signature.length) {
-          return false;
-        }
-        for (var i = 0; i < signature.length; i++) {
-          if (bytes[i] != signature[i]) {
-            return false;
-          }
-        }
-        return true;
-      }
     }
+  }
+  void _syncControllersFromInfo(TallerInfo info) {
+    _isSyncingControllers = true;
+    _nombreController.text = info.nombre;
+    _direccionController.text = info.direccion ?? '';
+    _telefonoController.text = info.telefono ?? '';
+    _correoController.text = info.correo ?? '';
+    _lastSyncedAt = info.fechaActualizacion;
+    _initialized = true;
+    _isDirty = false;
+    _isSyncingControllers = false;
+  }
+
+  void _markDirtyOnUserEdit() {
+    if (_isSyncingControllers) {
+      return;
+    }
+    _isDirty = true;
   }
 }
 
@@ -273,14 +284,19 @@ class _LogoPreview extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       alignment: Alignment.center,
       child: hasLogo
-          ? Image.network(
-              logoUrl!,
-              fit: BoxFit.cover,
-              width: 120,
-              height: 120,
-              cacheWidth: 240,
-              cacheHeight: 240,
-              errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_rounded, size: 42),
+          ? Semantics(
+              label: 'Logo actual del taller',
+              image: true,
+              child: Image.network(
+                logoUrl!,
+                fit: BoxFit.cover,
+                width: 120,
+                height: 120,
+                cacheWidth: 240,
+                cacheHeight: 240,
+                excludeFromSemantics: true,
+                errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_rounded, size: 42),
+              ),
             )
           : const Icon(Icons.business_rounded, size: 42),
     );

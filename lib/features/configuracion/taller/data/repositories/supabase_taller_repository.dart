@@ -1,14 +1,17 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/models/taller_info.dart';
 import '../../domain/repositories/taller_repository.dart';
+import '../../domain/utils/logo_image_validator.dart';
 
 class SupabaseTallerRepository implements TallerRepository {
   SupabaseTallerRepository(this._client);
 
   final SupabaseClient _client;
+  final Random _random = Random.secure();
   static const _table = 'taller_info';
   static const _bucket = 'taller-logos';
   static const _singletonId = '00000000-0000-0000-0000-000000000001';
@@ -18,12 +21,7 @@ class SupabaseTallerRepository implements TallerRepository {
     try {
       final row = await _client.from(_table).select().eq('id', _singletonId).maybeSingle();
       if (row == null) {
-        final legacyRow =
-            await _client.from(_table).select().order('fecha_actualizacion', ascending: false).limit(1).maybeSingle();
-        if (legacyRow == null) {
-          return TallerInfo.vacio();
-        }
-        return _fromRow(_row(legacyRow));
+        return TallerInfo.vacio().copyWith(id: _singletonId);
       }
       return _fromRow(_row(row));
     } on PostgrestException catch (error) {
@@ -62,15 +60,23 @@ class SupabaseTallerRepository implements TallerRepository {
   Future<String> subirLogo(Uint8List bytes, String nombreArchivo) async {
     try {
       final sanitizedName = _sanitizeFileName(nombreArchivo);
-      final contentType = _contentTypeForBytes(bytes);
-      final objectPath = 'logo_${DateTime.now().millisecondsSinceEpoch}_$sanitizedName';
+      final imageType = detectLogoImageType(bytes);
+      if (imageType == null) {
+        throw const FormatException('Solo se permiten imágenes PNG, JPG/JPEG o WEBP.');
+      }
+      final extension = extractLogoExtension(sanitizedName);
+      if (extension == null || !doesLogoExtensionMatchType(extension, imageType)) {
+        throw const FormatException('La extensión del archivo no coincide con su formato real.');
+      }
+      final randomSuffix = _random.nextInt(1 << 32).toRadixString(16);
+      final objectPath = 'logo_${DateTime.now().microsecondsSinceEpoch}_$randomSuffix_$sanitizedName';
 
       await _client.storage.from(_bucket).uploadBinary(
             objectPath,
             bytes,
             fileOptions: FileOptions(
-              upsert: true,
-              contentType: contentType,
+              upsert: false,
+              contentType: imageType.contentType,
             ),
           );
 
@@ -79,6 +85,19 @@ class SupabaseTallerRepository implements TallerRepository {
       throw StateError('No se pudo subir el logo: ${error.message}');
     } on FormatException catch (error) {
       throw StateError(error.message);
+    }
+  }
+
+  @override
+  Future<void> eliminarLogoPorUrl(String logoUrl) async {
+    final objectPath = _extractObjectPathFromPublicUrl(logoUrl);
+    if (objectPath == null) {
+      return;
+    }
+    try {
+      await _client.storage.from(_bucket).remove([objectPath]);
+    } on StorageException {
+      // Ignorado: la limpieza es best effort.
     }
   }
 
@@ -114,33 +133,17 @@ class SupabaseTallerRepository implements TallerRepository {
     return sanitized.isEmpty ? 'logo.png' : sanitized;
   }
 
-  String _contentTypeForBytes(Uint8List bytes) {
-    if (_startsWith(bytes, const [0xFF, 0xD8, 0xFF])) {
-      return 'image/jpeg';
+  String? _extractObjectPathFromPublicUrl(String logoUrl) {
+    final uri = Uri.tryParse(logoUrl);
+    if (uri == null) {
+      return null;
     }
-    if (_startsWith(bytes, const [0x89, 0x50, 0x4E, 0x47])) {
-      return 'image/png';
+    final marker = '/storage/v1/object/public/$_bucket/';
+    final fullPath = uri.path;
+    final markerIndex = fullPath.indexOf(marker);
+    if (markerIndex < 0) {
+      return null;
     }
-    if (_startsWith(bytes, const [0x52, 0x49, 0x46, 0x46]) &&
-        bytes.length > 11 &&
-        bytes[8] == 0x57 &&
-        bytes[9] == 0x45 &&
-        bytes[10] == 0x42 &&
-        bytes[11] == 0x50) {
-      return 'image/webp';
-    }
-    throw const FormatException('Solo se permiten imágenes PNG, JPG/JPEG o WEBP.');
-  }
-
-  bool _startsWith(List<int> bytes, List<int> signature) {
-    if (bytes.length < signature.length) {
-      return false;
-    }
-    for (var i = 0; i < signature.length; i++) {
-      if (bytes[i] != signature[i]) {
-        return false;
-      }
-    }
-    return true;
+    return Uri.decodeComponent(fullPath.substring(markerIndex + marker.length));
   }
 }

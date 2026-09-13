@@ -6,3 +6,45 @@
 -- 4) Guardar
 --
 -- Este bucket público se usa para almacenar logos del taller y exponer URL pública.
+--
+-- Políticas SQL opcionales para Storage (ejecutar en SQL Editor):
+-- Recomendación: lectura pública + escritura autenticada y acotada por ruta.
+-- Si estás en una fase sin auth, evalúa temporalmente políticas más permisivas.
+--
+-- drop policy if exists "Permitir lectura publica logos taller" on storage.objects;
+-- drop policy if exists "Permitir insercion publica logos taller" on storage.objects;
+-- drop policy if exists "Permitir actualizacion publica logos taller" on storage.objects;
+-- drop policy if exists "Permitir eliminacion publica logos taller" on storage.objects;
+--
+-- create policy "Permitir lectura publica logos taller"
+-- on storage.objects for select
+-- using (bucket_id = 'taller-logos');
+--
+-- create policy "Permitir insercion publica logos taller"
+-- on storage.objects for insert
+-- with check (
+--   bucket_id = 'taller-logos'
+--   and auth.role() = 'authenticated'
+--   and name like 'logo\\_%' escape '\\'
+-- );
+--
+-- create policy "Permitir actualizacion publica logos taller"
+-- on storage.objects for update
+-- using (
+--   bucket_id = 'taller-logos'
+--   and auth.role() = 'authenticated'
+--   and name like 'logo\\_%' escape '\\'
+-- )
+-- with check (
+--   bucket_id = 'taller-logos'
+--   and auth.role() = 'authenticated'
+--   and name like 'logo\\_%' escape '\\'
+-- );
+--
+-- create policy "Permitir eliminacion publica logos taller"
+-- on storage.objects for delete
+-- using (
+--   bucket_id = 'taller-logos'
+--   and auth.role() = 'authenticated'
+--   and name like 'logo\\_%' escape '\\'
+-- );
