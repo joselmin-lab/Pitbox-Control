@@ -129,6 +129,7 @@ void main() {
 
     expect(result.created, 1);
     expect(result.updated, 0);
+    expect(result.skipped, 0);
     expect(result.errors.length, 1);
     expect(result.errors.first, contains('clave duplicada'));
   });

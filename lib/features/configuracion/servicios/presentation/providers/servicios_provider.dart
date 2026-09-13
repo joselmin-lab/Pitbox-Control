@@ -192,7 +192,7 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
 
     final headers = parsed.first.map((item) => item.toString().trim().toLowerCase()).toList(growable: false);
     const expected = ['nombre', 'descripcion', 'precio', 'categoria', 'activo'];
-    if (headers.length < expected.length ||
+    if (headers.length != expected.length ||
         headers[0] != expected[0] ||
         headers[1] != expected[1] ||
         headers[2] != expected[2] ||

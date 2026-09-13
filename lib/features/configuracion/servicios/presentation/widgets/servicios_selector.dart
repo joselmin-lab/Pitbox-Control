@@ -31,23 +31,26 @@ class ServiciosSelector extends StatelessWidget {
             ),
             controlAffinity: ListTileControlAffinity.leading,
             secondary: seleccion.containsKey(servicio.id)
-                ? DropdownButton<int>(
-                    value: seleccion[servicio.id] ?? 1,
-                    items: [
-                      for (var cantidad = 1; cantidad <= 20; cantidad++)
-                        DropdownMenuItem<int>(
-                          value: cantidad,
-                          child: Text('x$cantidad'),
-                        ),
-                    ],
-                    onChanged: (cantidad) {
-                      if (cantidad == null) {
-                        return;
-                      }
-                      final next = Map<String, int>.from(seleccion);
-                      next[servicio.id] = cantidad;
-                      onChanged(next);
-                    },
+                ? Semantics(
+                    label: 'Cantidad del servicio ${servicio.nombre}',
+                    child: DropdownButton<int>(
+                      value: seleccion[servicio.id] ?? 1,
+                      items: [
+                        for (var cantidad = 1; cantidad <= 20; cantidad++)
+                          DropdownMenuItem<int>(
+                            value: cantidad,
+                            child: Text('x$cantidad'),
+                          ),
+                      ],
+                      onChanged: (cantidad) {
+                        if (cantidad == null) {
+                          return;
+                        }
+                        final next = Map<String, int>.from(seleccion);
+                        next[servicio.id] = cantidad;
+                        onChanged(next);
+                      },
+                    ),
                   )
                 : null,
             onChanged: (selected) {
