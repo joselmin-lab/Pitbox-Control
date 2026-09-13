@@ -113,6 +113,25 @@ void main() {
   });
 
 
+
+
+  test('importarCsv reporta claves duplicadas dentro del mismo archivo', () async {
+    final container = _buildContainer(_ServicioRepositoryFake(const []));
+    addTearDown(container.dispose);
+
+    await container.read(serviciosProvider.future);
+
+    final result = await container.read(serviciosProvider.notifier).importarCsv(
+          'nombre,descripcion,precio,categoria,activo\n'
+          'Lavado,Primera fila,40,Estética,true\n'
+          'Lavado,Duplicada,45,Estética,false',
+        );
+
+    expect(result.created, 1);
+    expect(result.updated, 0);
+    expect(result.errors.length, 1);
+    expect(result.errors.first, contains('clave duplicada'));
+  });
   test('importarCsv reindexa claves cuando cambia nombre o categoría', () async {
     final repository = _ServicioRepositoryFake([
       Servicio(

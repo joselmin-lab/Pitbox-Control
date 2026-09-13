@@ -217,6 +217,7 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
       for (final servicio in existentes)
         _buildCsvLookupKey(servicio.nombre, servicio.categoria): servicio,
     };
+    final seenCsvKeys = <String>{};
 
     for (var i = 1; i < parsed.length; i++) {
       final row = parsed[i];
@@ -241,6 +242,13 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
         }
 
         final key = _buildCsvLookupKey(nombre, categoria);
+        if (!seenCsvKeys.add(key)) {
+          errors.add(
+            'Fila ${i + 1}: clave duplicada en CSV para nombre/categoría ($nombre / ${categoria ?? 'sin categoría'}).',
+          );
+          continue;
+        }
+
         final existente = byKey[key];
         if (existente == null) {
           final createdServicio = await repository.create(
