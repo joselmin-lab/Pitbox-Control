@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/app_spacing.dart';
 import '../../domain/models/servicio.dart';
 
 class ServiciosSelector extends StatefulWidget {
@@ -56,10 +57,10 @@ class _ServiciosSelectorState extends State<ServiciosSelector> {
           ),
           onChanged: (value) => setState(() => _searchQuery = value),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.xs),
         if (serviciosFiltrados.isEmpty)
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: Text('No se encontraron servicios.'),
           )
         else
