@@ -1,0 +1,8 @@
+-- No se crea bucket por SQL estándar en este flujo.
+-- Crea el bucket manualmente desde Supabase Dashboard:
+-- 1) Storage -> New bucket
+-- 2) Nombre: taller-logos
+-- 3) Activar "Public bucket"
+-- 4) Guardar
+--
+-- Este bucket público se usa para almacenar logos del taller y exponer URL pública.

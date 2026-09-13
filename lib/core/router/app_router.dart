@@ -10,6 +10,7 @@ import '../../features/configuracion/servicios/presentation/screens/paquete_serv
 import '../../features/configuracion/servicios/presentation/screens/paquetes_servicios_screen.dart';
 import '../../features/configuracion/servicios/presentation/screens/servicio_form_screen.dart';
 import '../../features/configuracion/servicios/presentation/screens/servicios_screen.dart';
+import '../../features/configuracion/taller/presentation/screens/taller_info_screen.dart';
 import '../../features/contabilidad/presentation/screens/contabilidad_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/proformas/presentation/screens/proformas_screen.dart';
@@ -135,6 +136,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         PaqueteServicioFormScreen(paqueteId: state.pathParameters['id']!),
                   ),
                 ],
+              ),
+              GoRoute(
+                path: 'taller',
+                name: 'configuracion-taller',
+                builder: (context, state) => const TallerInfoScreen(),
               ),
             ],
           ),

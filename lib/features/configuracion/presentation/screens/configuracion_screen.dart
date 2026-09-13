@@ -59,6 +59,24 @@ class ConfiguracionScreen extends StatelessWidget {
                 ),
               ),
             ),
+            SizedBox(
+              width: 360,
+              child: AppSectionCard(
+                title: 'Datos del taller',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Configura el nombre, contacto y logo del taller.'),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: () => context.go('/configuracion/taller'),
+                      icon: const Icon(Icons.storefront_rounded),
+                      label: const Text('Abrir datos del taller'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ],
