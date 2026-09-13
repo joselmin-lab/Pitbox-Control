@@ -75,6 +75,69 @@ void main() {
     filtrados = container.read(serviciosFiltradosProvider);
     expect(filtrados.map((item) => item.id).toList(), ['srv-2']);
   });
+
+  test('importarCsv valida encabezado inválido', () async {
+    final container = _buildContainer(_ServicioRepositoryFake(const []));
+    addTearDown(container.dispose);
+
+    await container.read(serviciosProvider.future);
+
+    final result = await container.read(serviciosProvider.notifier).importarCsv(
+          'nombre,precio,activo\nCambio de aceite,120,true',
+        );
+
+    expect(result.created, 0);
+    expect(result.updated, 0);
+    expect(result.errors, isNotEmpty);
+    expect(result.errors.first, contains('Encabezado inválido'));
+  });
+
+  test('importarCsv actualiza existentes y reporta errores por fila inválida', () async {
+    final repository = _ServicioRepositoryFake([
+      Servicio(
+        id: 'srv-1',
+        nombre: 'Cambio de aceite',
+        categoria: 'Mantenimiento',
+        precio: 120,
+        activo: true,
+        fechaCreacion: DateTime(2026, 1, 1),
+      ),
+    ]);
+    final container = _buildContainer(repository);
+    addTearDown(container.dispose);
+
+    await container.read(serviciosProvider.future);
+
+    final result = await container.read(serviciosProvider.notifier).importarCsv(
+          'nombre,descripcion,precio,categoria,activo\n'
+          'Cambio de aceite,Actualizado,150,Mantenimiento,false\n'
+          'Lavado,,40,Estética,si\n'
+          'Servicio inválido,,abc,General,true',
+        );
+
+    expect(result.updated, 1);
+    expect(result.created, 1);
+    expect(result.errors.length, 1);
+
+    final servicios = await repository.getAll();
+    final actualizado = servicios.firstWhere((item) => item.nombre == 'Cambio de aceite');
+    expect(actualizado.precio, 150);
+    expect(actualizado.activo, isFalse);
+
+    final creado = servicios.firstWhere((item) => item.nombre == 'Lavado');
+    expect(creado.activo, isTrue);
+  });
+
+}
+
+
+ProviderContainer _buildContainer(ServicioRepository servicioRepository) {
+  return ProviderContainer(
+    overrides: [
+      servicioRepositoryProvider.overrideWithValue(servicioRepository),
+      paqueteServicioRepositoryProvider.overrideWithValue(_PaqueteRepositoryFake()),
+    ],
+  );
 }
 
 class _ServicioRepositoryFake implements ServicioRepository {

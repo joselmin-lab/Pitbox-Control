@@ -165,7 +165,11 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
     }
 
     final text = utf8.decode(fileBytes, allowMalformed: true);
-    final parsed = const CsvToListConverter(shouldParseNumbers: false, eol: '\n').convert(text);
+    return importarCsv(text);
+  }
+
+  Future<ServiciosCsvImportResult> importarCsv(String csvContent) async {
+    final parsed = const CsvToListConverter(shouldParseNumbers: false).convert(csvContent);
     if (parsed.isEmpty) {
       return const ServiciosCsvImportResult(
         created: 0,

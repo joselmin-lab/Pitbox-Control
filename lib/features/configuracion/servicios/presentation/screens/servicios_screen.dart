@@ -227,9 +227,22 @@ class _ServiciosScreenState extends ConsumerState<ServiciosScreen> {
                                 IconButton(
                                   tooltip: 'Eliminar',
                                   onPressed: () async {
+                                    final paquetesAsync = ref.read(paquetesServiciosProvider);
+                                    if (paquetesAsync.isLoading) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Espera a que termine de cargar la lista de paquetes para validar asociaciones.',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return;
+                                    }
+
                                     final List<PaqueteServicio> paquetes =
-                                        ref.read(paquetesServiciosProvider).valueOrNull ??
-                                        const <PaqueteServicio>[];
+                                        paquetesAsync.valueOrNull ?? const <PaqueteServicio>[];
                                     final usadosEnPaquetes = paquetes
                                         .where(
                                           (paquete) =>
