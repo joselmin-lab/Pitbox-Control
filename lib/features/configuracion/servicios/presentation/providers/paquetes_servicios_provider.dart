@@ -102,14 +102,6 @@ class PaquetesServiciosNotifier extends AsyncNotifier<List<PaqueteServicio>> {
 
     final actuales = await repository.getServiciosByPaquete(id);
 
-    for (final entry in servicioCantidad.entries) {
-      await repository.addServicioToPaquete(
-        paqueteId: id,
-        servicioId: entry.key,
-        cantidad: entry.value,
-      );
-    }
-
     final objetivos = servicioCantidad.keys.toSet();
     for (final item in actuales) {
       if (!objetivos.contains(item.servicioId)) {
@@ -118,6 +110,14 @@ class PaquetesServiciosNotifier extends AsyncNotifier<List<PaqueteServicio>> {
           servicioId: item.servicioId,
         );
       }
+    }
+
+    for (final entry in servicioCantidad.entries) {
+      await repository.addServicioToPaquete(
+        paqueteId: id,
+        servicioId: entry.key,
+        cantidad: entry.value,
+      );
     }
 
     await reload();

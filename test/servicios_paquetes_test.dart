@@ -131,11 +131,12 @@ void main() {
           'nombre,descripcion,precio,categoria,activo\n'
           'Cambio de aceite,Actualizado,150,Mantenimiento,false\n'
           'Lavado,,40,Estética,si\n'
+          'Engrase,,30,Mantenimiento,no\n'
           'Servicio inválido,,abc,General,true',
         );
 
     expect(result.updated, 1);
-    expect(result.created, 1);
+    expect(result.created, 2);
     expect(result.errors.length, 1);
 
     final servicios = await repository.getAll();
@@ -145,6 +146,9 @@ void main() {
 
     final creado = servicios.firstWhere((item) => item.nombre == 'Lavado');
     expect(creado.activo, isTrue);
+
+    final engrase = servicios.firstWhere((item) => item.nombre == 'Engrase');
+    expect(engrase.activo, isFalse);
   });
 
 }

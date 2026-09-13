@@ -240,6 +240,18 @@ class _ServiciosScreenState extends ConsumerState<ServiciosScreen> {
                                       }
                                       return;
                                     }
+                                    if (paquetesAsync.hasError) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'No se pudo validar si el servicio está asociado a paquetes. Intenta nuevamente.',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return;
+                                    }
 
                                     final List<PaqueteServicio> paquetes =
                                         paquetesAsync.valueOrNull ?? const <PaqueteServicio>[];
