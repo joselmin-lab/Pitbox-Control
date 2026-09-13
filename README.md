@@ -1,13 +1,13 @@
 # Pitbox Control
 
-Pitbox Control es una app multiplataforma para la gestión de talleres mecánicos. Esta versión incluye **Fase 1 + Fase 2**: base de interfaz modular y módulos funcionales de **Clientes**, **Vehículos**, **Servicios** y **Paquetes de servicios** con relación **1:N** (clientes/vehículos) y **N:N** (paquetes/servicios).
+Pitbox Control es una app multiplataforma para la gestión de talleres mecánicos. Esta versión incluye **Fase 1 + Fase 2**: base de interfaz modular y módulos funcionales de **Clientes**, **Vehículos**, **Servicios**, **Paquetes de servicios** y **Datos del taller** con relación **1:N** (clientes/vehículos) y **N:N** (paquetes/servicios).
 
 ## Stack técnico
 
 - Flutter 3.x / Dart con null safety
 - `flutter_riverpod` para estado de UI desacoplado
 - `go_router` para navegación declarativa
-- `supabase_flutter` para backend real de Clientes, Vehículos, Servicios y Paquetes
+- `supabase_flutter` para backend real de Clientes, Vehículos, Servicios, Paquetes y Datos del taller
 - `csv`, `file_picker` y `file_saver` para importar/exportar Servicios en CSV
 - `flutter_lints` para lint estricto
 
@@ -106,6 +106,7 @@ main.dart
 - Módulo Vehículos funcional: listado, búsqueda, alta, edición, detalle y eliminación.
 - Módulo Servicios funcional: listado, búsqueda/filtro, alta, edición, eliminación e importación/exportación CSV.
 - Módulo Paquetes funcional: listado, detalle, alta, edición, eliminación y asociación dinámica de servicios.
+- Módulo Datos del taller funcional: edición de nombre, dirección, teléfono, correo y logo del taller.
 - Relación 1:N Cliente → Vehículos en detalle de cliente.
 - Tema global claro con paleta rojo/negro, espaciados y estados interactivos.
 - Componentes reutilizables: botones, cards, badges y tabla.
@@ -127,18 +128,26 @@ main.dart
 - [x] Relación 1:N (un cliente con varios vehículos) visible en detalle de cliente.
 - [x] Módulo de Servicios (CRUD + CSV de importación/exportación).
 - [x] Módulo de Paquetes de servicios (CRUD + selección de servicios + precio dinámico/manual).
+- [x] Módulo de Datos del taller (nombre, dirección, teléfono, correo y logo en Storage).
 - [x] Navegación completa para crear/editar/ver detalle de clientes y vehículos.
 - [x] KPIs de dashboard para totales reales desde repositorio de datos.
 
 ## Conexión a Supabase
 
-Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios` y `paquete_servicio_items` deben crearse antes de usar la app con datos reales.
+Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_servicio_items` y `taller_info` deben crearse antes de usar la app con datos reales.
 
 1. Entra a [supabase.com](https://supabase.com) y abre tu proyecto.
 2. Ve a **SQL Editor**.
 3. Abre el archivo `supabase/schema.sql` de este repositorio.
 4. Copia/pega y ejecuta `supabase/schema.sql` para clientes/vehículos.
 5. Luego copia/pega y ejecuta `supabase/schema_servicios.sql` para servicios/paquetes.
+6. Luego copia/pega y ejecuta `supabase/schema_taller.sql` para datos generales del taller.
+7. En **Storage** crea manualmente el bucket público `taller-logos`:
+   - Storage → **New bucket**
+   - Nombre: `taller-logos`
+   - Activar **Public bucket**
+   - Guardar
+8. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
 
 > El script SQL se ejecuta manualmente desde Supabase (no desde esta app).
 
@@ -154,6 +163,7 @@ La app inicializa Supabase en `main.dart` y los providers inyectan repositorios 
 - `SupabaseVehiculoRepository`
 - `SupabaseServicioRepository`
 - `SupabasePaqueteServicioRepository`
+- `SupabaseTallerRepository`
 
 ## Checklist de fase de datos
 
@@ -161,6 +171,7 @@ La app inicializa Supabase en `main.dart` y los providers inyectan repositorios 
 - [x] Conexión real de Vehículos a Supabase.
 - [x] Conexión real de Servicios a Supabase.
 - [x] Conexión real de Paquetes e Items de paquete a Supabase.
+- [x] Conexión real de Datos del taller a Supabase + Storage para logos.
 - [x] Relación 1:N Cliente → Vehículos persistida con FK en base de datos.
 - [x] Relación N:N Paquetes ↔ Servicios persistida con tabla intermedia.
 - [x] Script SQL con RLS y políticas básicas para fase sin autenticación.
@@ -181,8 +192,9 @@ Reglas del importador:
 
 ## Siguiente fase recomendada
 
-Implementar **Proformas** usando Servicios/Paquetes como base de cotización, y luego enlazar a **Trabajos**:
+Implementar **Proformas** usando Servicios/Paquetes como base de cotización y aprovechar los datos de taller en plantillas/impresión:
 
 - Crear módulo de Proformas con líneas por servicio/paquete y cálculo de totales/impuestos.
+- Incluir nombre/logo/datos del taller en encabezado de proformas y documentos exportables.
 - Definir flujo Proforma → Aprobación → Trabajo con estados y trazabilidad.
 - Habilitar autenticación y endurecer políticas RLS por usuario/rol.
