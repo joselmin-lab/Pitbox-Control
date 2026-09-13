@@ -146,7 +146,7 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
                                       direccion: _direccionController.text,
                                     );
                                 if (!mounted) return;
-                                context.go('/clientes/${cliente.id}');
+                                this.context.go('/clientes/${cliente.id}');
                               } else {
                                 await ref.read(clientesProvider.notifier).create(
                                       nombre: _nombreController.text.trim(),
@@ -156,11 +156,11 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
                                       direccion: _direccionController.text,
                                     );
                                 if (!mounted) return;
-                                context.go('/clientes');
+                                this.context.go('/clientes');
                               }
                             } catch (_) {
                               if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              ScaffoldMessenger.of(this.context).showSnackBar(
                                 const SnackBar(content: Text('No se pudo guardar el cliente. Intenta nuevamente.')),
                               );
                             } finally {

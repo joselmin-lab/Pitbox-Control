@@ -360,7 +360,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                                       kilometraje: parsedKilometraje,
                                     );
                                 if (!mounted) return;
-                                context.go('/vehiculos/${vehiculo.id}');
+                                this.context.go('/vehiculos/${vehiculo.id}');
                               } else {
                                 await ref.read(vehiculosProvider.notifier).create(
                                       clienteId: _selectedClienteId!,
@@ -372,11 +372,11 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                                       kilometraje: parsedKilometraje,
                                     );
                                 if (!mounted) return;
-                                context.go('/vehiculos');
+                                this.context.go('/vehiculos');
                               }
                             } catch (_) {
                               if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              ScaffoldMessenger.of(this.context).showSnackBar(
                                 const SnackBar(content: Text('No se pudo guardar el vehículo. Intenta nuevamente.')),
                               );
                             } finally {
