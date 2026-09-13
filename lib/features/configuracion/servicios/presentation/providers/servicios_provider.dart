@@ -257,6 +257,7 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
           byKey[key] = createdServicio;
           created++;
         } else {
+          final previousKey = _buildCsvLookupKey(existente.nombre, existente.categoria);
           final updatedServicio = await repository.update(
             existente.copyWith(
               nombre: nombre,
@@ -268,6 +269,7 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
               activo: activo,
             ),
           );
+          byKey.remove(previousKey);
           byKey[key] = updatedServicio;
           updated++;
         }

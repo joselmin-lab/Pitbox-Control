@@ -111,6 +111,37 @@ void main() {
     expect(withEmptyRows.created, 1);
     expect(withEmptyRows.skipped, 2);
   });
+
+
+  test('importarCsv reindexa claves cuando cambia nombre o categoría', () async {
+    final repository = _ServicioRepositoryFake([
+      Servicio(
+        id: 'srv-1',
+        nombre: 'Cambio de aceite',
+        categoria: 'Mantenimiento',
+        precio: 120,
+        activo: true,
+        fechaCreacion: DateTime(2026, 1, 1),
+      ),
+    ]);
+    final container = _buildContainer(repository);
+    addTearDown(container.dispose);
+
+    await container.read(serviciosProvider.future);
+
+    final result = await container.read(serviciosProvider.notifier).importarCsv(
+          'nombre,descripcion,precio,categoria,activo\n'
+          'Cambio premium,Renombrado,140,Mantenimiento,true\n'
+          'Cambio de aceite,Nuevo servicio,110,Mantenimiento,true',
+        );
+
+    expect(result.updated, 1);
+    expect(result.created, 1);
+
+    final servicios = await repository.getAll();
+    expect(servicios.where((item) => item.nombre == 'Cambio premium').length, 1);
+    expect(servicios.where((item) => item.nombre == 'Cambio de aceite').length, 1);
+  });
   test('importarCsv actualiza existentes y reporta errores por fila inválida', () async {
     final repository = _ServicioRepositoryFake([
       Servicio(

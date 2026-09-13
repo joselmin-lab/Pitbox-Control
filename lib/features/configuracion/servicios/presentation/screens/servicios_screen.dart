@@ -152,7 +152,8 @@ class _ServiciosScreenState extends ConsumerState<ServiciosScreen> {
                               const SizedBox(height: AppSpacing.sm),
                               const Text('Errores:'),
                               const SizedBox(height: AppSpacing.xs),
-                              Flexible(
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 180),
                                 child: SingleChildScrollView(
                                   child: Text(result.errors.join('\n')),
                                 ),
