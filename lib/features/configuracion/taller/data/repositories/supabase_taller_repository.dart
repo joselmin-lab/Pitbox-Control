@@ -69,7 +69,7 @@ class SupabaseTallerRepository implements TallerRepository {
         throw const FormatException('La extensión del archivo no coincide con su formato real.');
       }
       final randomSuffix = _random.nextInt(1 << 32).toRadixString(16);
-      final objectPath = 'logo_${DateTime.now().microsecondsSinceEpoch}_$randomSuffix_$sanitizedName';
+      final objectPath = 'logo_${DateTime.now().microsecondsSinceEpoch}_${randomSuffix}_$sanitizedName';
 
       await _client.storage.from(_bucket).uploadBinary(
             objectPath,
