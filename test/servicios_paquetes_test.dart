@@ -92,6 +92,25 @@ void main() {
     expect(result.errors.first, contains('Encabezado inválido'));
   });
 
+
+
+  test('importarCsv reporta CSV inválido y contabiliza filas vacías como omitidas', () async {
+    final container = _buildContainer(_ServicioRepositoryFake(const []));
+    addTearDown(container.dispose);
+
+    await container.read(serviciosProvider.future);
+
+    final invalid = await container.read(serviciosProvider.notifier).importarCsv(
+          '"nombre,descripcion,precio,categoria,activo\n"fila rota',
+        );
+    expect(invalid.errors.first, contains('CSV inválido'));
+
+    final withEmptyRows = await container.read(serviciosProvider.notifier).importarCsv(
+          'nombre,descripcion,precio,categoria,activo\n\n\nLavado,,40,Estética,true',
+        );
+    expect(withEmptyRows.created, 1);
+    expect(withEmptyRows.skipped, 2);
+  });
   test('importarCsv actualiza existentes y reporta errores por fila inválida', () async {
     final repository = _ServicioRepositoryFake([
       Servicio(

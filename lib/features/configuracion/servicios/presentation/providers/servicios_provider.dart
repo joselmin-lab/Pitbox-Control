@@ -169,7 +169,18 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
   }
 
   Future<ServiciosCsvImportResult> importarCsv(String csvContent) async {
-    final parsed = const CsvToListConverter(shouldParseNumbers: false).convert(csvContent);
+    List<List<dynamic>> parsed;
+    try {
+      parsed = const CsvToListConverter(shouldParseNumbers: false).convert(csvContent);
+    } catch (error) {
+      return ServiciosCsvImportResult(
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        errors: ['CSV inválido: $error'],
+      );
+    }
+
     if (parsed.isEmpty) {
       return const ServiciosCsvImportResult(
         created: 0,
