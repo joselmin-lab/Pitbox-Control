@@ -3,6 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/services/supabase_service.dart';
 import '../../features/clientes/data/repositories/supabase_cliente_repository.dart';
+import '../../features/configuracion/servicios/data/repositories/supabase_paquete_servicio_repository.dart';
+import '../../features/configuracion/servicios/data/repositories/supabase_servicio_repository.dart';
+import '../../features/configuracion/servicios/domain/repositories/paquete_servicio_repository.dart';
+import '../../features/configuracion/servicios/domain/repositories/servicio_repository.dart';
 import '../../features/clientes/domain/repositories/cliente_repository.dart';
 import '../../features/vehiculos/data/repositories/supabase_vehiculo_repository.dart';
 import '../../features/vehiculos/domain/repositories/vehiculo_repository.dart';
@@ -24,4 +28,13 @@ final clienteRepositoryProvider = Provider<ClienteRepository>((ref) {
 
 final vehiculoRepositoryProvider = Provider<VehiculoRepository>((ref) {
   return SupabaseVehiculoRepository(ref.watch(_supabaseClientProvider));
+});
+
+
+final servicioRepositoryProvider = Provider<ServicioRepository>((ref) {
+  return SupabaseServicioRepository(ref.watch(_supabaseClientProvider));
+});
+
+final paqueteServicioRepositoryProvider = Provider<PaqueteServicioRepository>((ref) {
+  return SupabasePaqueteServicioRepository(ref.watch(_supabaseClientProvider));
 });

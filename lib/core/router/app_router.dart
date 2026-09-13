@@ -5,6 +5,11 @@ import '../../features/clientes/presentation/screens/cliente_detail_screen.dart'
 import '../../features/clientes/presentation/screens/cliente_form_screen.dart';
 import '../../features/clientes/presentation/screens/clientes_screen.dart';
 import '../../features/configuracion/presentation/screens/configuracion_screen.dart';
+import '../../features/configuracion/servicios/presentation/screens/paquete_servicio_detail_screen.dart';
+import '../../features/configuracion/servicios/presentation/screens/paquete_servicio_form_screen.dart';
+import '../../features/configuracion/servicios/presentation/screens/paquetes_servicios_screen.dart';
+import '../../features/configuracion/servicios/presentation/screens/servicio_form_screen.dart';
+import '../../features/configuracion/servicios/presentation/screens/servicios_screen.dart';
 import '../../features/contabilidad/presentation/screens/contabilidad_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/proformas/presentation/screens/proformas_screen.dart';
@@ -89,6 +94,49 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/configuracion',
             name: 'configuracion',
             builder: (context, state) => const ConfiguracionScreen(),
+            routes: [
+              GoRoute(
+                path: 'servicios',
+                name: 'configuracion-servicios',
+                builder: (context, state) => const ServiciosScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'nuevo',
+                    name: 'configuracion-servicios-nuevo',
+                    builder: (context, state) => const ServicioFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id/editar',
+                    name: 'configuracion-servicios-editar',
+                    builder: (context, state) => ServicioFormScreen(servicioId: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'paquetes',
+                name: 'configuracion-paquetes',
+                builder: (context, state) => const PaquetesServiciosScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'nuevo',
+                    name: 'configuracion-paquetes-nuevo',
+                    builder: (context, state) => const PaqueteServicioFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    name: 'configuracion-paquetes-detalle',
+                    builder: (context, state) =>
+                        PaqueteServicioDetailScreen(paqueteId: state.pathParameters['id']!),
+                  ),
+                  GoRoute(
+                    path: ':id/editar',
+                    name: 'configuracion-paquetes-editar',
+                    builder: (context, state) =>
+                        PaqueteServicioFormScreen(paqueteId: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
