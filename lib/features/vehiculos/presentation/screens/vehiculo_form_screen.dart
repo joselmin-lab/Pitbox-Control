@@ -431,7 +431,7 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
         _selectedClienteId = null;
       }
     });
-    if (textMatchesSelection && selectedCliente != null) {
+    if (textMatchesSelection) {
       _setClienteFieldText(selectedCliente.nombreCompleto);
     } else if (selectedCliente == null && hadSelectedClienteId) {
       _setClienteFieldText('');
