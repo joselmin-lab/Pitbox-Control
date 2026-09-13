@@ -18,7 +18,7 @@ class SupabaseService {
       return;
     }
     try {
-      await Supabase.initialize(url: SupabaseConfig.url, anonKey: SupabaseConfig.anonKey);
+      await Supabase.initialize(url: SupabaseConfig.url, publishableKey: SupabaseConfig.anonKey);
       _initialized = true;
       _initializationError = null;
     } catch (error) {

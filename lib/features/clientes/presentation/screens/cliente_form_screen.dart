@@ -145,9 +145,8 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
                                       email: _emailController.text,
                                       direccion: _direccionController.text,
                                     );
-                                if (mounted) {
-                                  context.go('/clientes/${cliente.id}');
-                                }
+                                if (!mounted) return;
+                                context.go('/clientes/${cliente.id}');
                               } else {
                                 await ref.read(clientesProvider.notifier).create(
                                       nombre: _nombreController.text.trim(),
@@ -156,16 +155,14 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
                                       email: _emailController.text,
                                       direccion: _direccionController.text,
                                     );
-                                if (mounted) {
-                                  context.go('/clientes');
-                                }
+                                if (!mounted) return;
+                                context.go('/clientes');
                               }
                             } catch (_) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('No se pudo guardar el cliente. Intenta nuevamente.')),
-                                );
-                              }
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('No se pudo guardar el cliente. Intenta nuevamente.')),
+                              );
                             } finally {
                               if (mounted) {
                                 setState(() => _saving = false);
