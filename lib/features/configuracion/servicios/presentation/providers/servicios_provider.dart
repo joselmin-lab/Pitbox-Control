@@ -118,10 +118,11 @@ class ServiciosNotifier extends AsyncNotifier<List<Servicio>> {
 
   Future<void> exportarCsv() async {
     final servicios = state.valueOrNull ?? await ref.read(serviciosProvider.future);
+    final serviciosParaExportar = servicios ?? const <Servicio>[];
 
     final rows = <List<dynamic>>[
       const ['nombre', 'descripcion', 'precio', 'categoria', 'activo'],
-      ...servicios.map(
+      ...serviciosParaExportar.map(
         (servicio) => [
           servicio.nombre,
           servicio.descripcion ?? '',

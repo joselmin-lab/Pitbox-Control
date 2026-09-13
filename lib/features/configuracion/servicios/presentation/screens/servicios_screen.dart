@@ -89,7 +89,7 @@ class _ServiciosScreenState extends ConsumerState<ServiciosScreen> {
             SizedBox(
               width: 220,
               child: DropdownButtonFormField<String>(
-                value: categoriaFilter ?? '',
+                initialValue: categoriaFilter ?? '',
                 decoration: const InputDecoration(labelText: 'Filtrar por categoría'),
                 items: [
                   const DropdownMenuItem<String>(

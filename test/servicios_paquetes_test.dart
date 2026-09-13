@@ -4,7 +4,6 @@ import 'package:pitbox_control/features/configuracion/servicios/domain/models/pa
 import 'package:pitbox_control/features/configuracion/servicios/domain/models/servicio.dart';
 import 'package:pitbox_control/features/configuracion/servicios/domain/repositories/paquete_servicio_repository.dart';
 import 'package:pitbox_control/features/configuracion/servicios/domain/repositories/servicio_repository.dart';
-import 'package:pitbox_control/features/configuracion/servicios/presentation/providers/paquetes_servicios_provider.dart';
 import 'package:pitbox_control/features/configuracion/servicios/presentation/providers/servicios_provider.dart';
 import 'package:pitbox_control/shared/providers/repository_providers.dart';
 

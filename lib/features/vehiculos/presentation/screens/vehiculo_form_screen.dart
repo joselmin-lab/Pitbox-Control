@@ -359,9 +359,8 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                                       color: _colorController.text,
                                       kilometraje: parsedKilometraje,
                                     );
-                                if (mounted) {
-                                  context.go('/vehiculos/${vehiculo.id}');
-                                }
+                                if (!mounted) return;
+                                context.go('/vehiculos/${vehiculo.id}');
                               } else {
                                 await ref.read(vehiculosProvider.notifier).create(
                                       clienteId: _selectedClienteId!,
@@ -372,16 +371,14 @@ class _VehiculoFormScreenState extends ConsumerState<VehiculoFormScreen> {
                                       color: _colorController.text,
                                       kilometraje: parsedKilometraje,
                                     );
-                                if (mounted) {
-                                  context.go('/vehiculos');
-                                }
+                                if (!mounted) return;
+                                context.go('/vehiculos');
                               }
                             } catch (_) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('No se pudo guardar el vehículo. Intenta nuevamente.')),
-                                );
-                              }
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('No se pudo guardar el vehículo. Intenta nuevamente.')),
+                              );
                             } finally {
                               if (mounted) {
                                 setState(() => _saving = false);
