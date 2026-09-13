@@ -11,22 +11,25 @@ class SupabaseTallerRepository implements TallerRepository {
   final SupabaseClient _client;
   static const _table = 'taller_info';
   static const _bucket = 'taller-logos';
+  static const _singletonId = '00000000-0000-0000-0000-000000000001';
 
   @override
   Future<TallerInfo> getInfo() async {
     try {
-      final row = await _client
-          .from(_table)
-          .select()
-          .order('fecha_actualizacion', ascending: false)
-          .limit(1)
-          .maybeSingle();
+      final row = await _client.from(_table).select().eq('id', _singletonId).maybeSingle();
       if (row == null) {
-        return TallerInfo.vacio();
+        final legacyRow =
+            await _client.from(_table).select().order('fecha_actualizacion', ascending: false).limit(1).maybeSingle();
+        if (legacyRow == null) {
+          return TallerInfo.vacio();
+        }
+        return _fromRow(_row(legacyRow));
       }
       return _fromRow(_row(row));
     } on PostgrestException catch (error) {
       throw StateError('No se pudo cargar la información del taller: ${error.message}');
+    } on FormatException catch (error) {
+      throw StateError('Datos inválidos de taller_info: ${error.message}');
     }
   }
 
@@ -34,30 +37,10 @@ class SupabaseTallerRepository implements TallerRepository {
   Future<TallerInfo> guardarInfo(TallerInfo info) async {
     try {
       final now = DateTime.now().toUtc().toIso8601String();
-      final existing = await _client.from(_table).select('id').limit(1).maybeSingle();
-      final existingId = existing == null ? null : (_row(existing)['id'] as String);
-      final id = info.id.isNotEmpty ? info.id : existingId;
-
-      if (id == null) {
-        final inserted = await _client
-            .from(_table)
-            .insert({
-              'nombre': info.nombre,
-              'direccion': info.direccion,
-              'telefono': info.telefono,
-              'correo': info.correo,
-              'logo_url': info.logoUrl,
-              'fecha_actualizacion': now,
-            })
-            .select()
-            .single();
-        return _fromRow(_row(inserted));
-      }
-
       final updated = await _client
           .from(_table)
           .upsert({
-            'id': id,
+            'id': _singletonId,
             'nombre': info.nombre,
             'direccion': info.direccion,
             'telefono': info.telefono,
@@ -70,6 +53,8 @@ class SupabaseTallerRepository implements TallerRepository {
       return _fromRow(_row(updated));
     } on PostgrestException catch (error) {
       throw StateError('No se pudo guardar la información del taller: ${error.message}');
+    } on FormatException catch (error) {
+      throw StateError('Datos inválidos al guardar taller_info: ${error.message}');
     }
   }
 
@@ -77,6 +62,7 @@ class SupabaseTallerRepository implements TallerRepository {
   Future<String> subirLogo(Uint8List bytes, String nombreArchivo) async {
     try {
       final sanitizedName = _sanitizeFileName(nombreArchivo);
+      final contentType = _contentTypeForBytes(bytes);
       final objectPath = 'logo_${DateTime.now().millisecondsSinceEpoch}_$sanitizedName';
 
       await _client.storage.from(_bucket).uploadBinary(
@@ -84,13 +70,15 @@ class SupabaseTallerRepository implements TallerRepository {
             bytes,
             fileOptions: FileOptions(
               upsert: true,
-              contentType: _contentTypeForFileName(sanitizedName),
+              contentType: contentType,
             ),
           );
 
       return _client.storage.from(_bucket).getPublicUrl(objectPath);
     } on StorageException catch (error) {
       throw StateError('No se pudo subir el logo: ${error.message}');
+    } on FormatException catch (error) {
+      throw StateError(error.message);
     }
   }
 
@@ -117,7 +105,7 @@ class SupabaseTallerRepository implements TallerRepository {
     if (value is String) {
       return DateTime.parse(value).toLocal();
     }
-    return DateTime.now();
+    throw const FormatException('fecha_actualizacion inválida en taller_info');
   }
 
   String _sanitizeFileName(String value) {
@@ -126,13 +114,33 @@ class SupabaseTallerRepository implements TallerRepository {
     return sanitized.isEmpty ? 'logo.png' : sanitized;
   }
 
-  String _contentTypeForFileName(String fileName) {
-    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
+  String _contentTypeForBytes(Uint8List bytes) {
+    if (_startsWith(bytes, const [0xFF, 0xD8, 0xFF])) {
       return 'image/jpeg';
     }
-    if (fileName.endsWith('.webp')) {
+    if (_startsWith(bytes, const [0x89, 0x50, 0x4E, 0x47])) {
+      return 'image/png';
+    }
+    if (_startsWith(bytes, const [0x52, 0x49, 0x46, 0x46]) &&
+        bytes.length > 11 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
       return 'image/webp';
     }
-    return 'image/png';
+    throw const FormatException('Solo se permiten imágenes PNG, JPG/JPEG o WEBP.');
+  }
+
+  bool _startsWith(List<int> bytes, List<int> signature) {
+    if (bytes.length < signature.length) {
+      return false;
+    }
+    for (var i = 0; i < signature.length; i++) {
+      if (bytes[i] != signature[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 }

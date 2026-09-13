@@ -7,14 +7,30 @@
 create extension if not exists pgcrypto;
 
 create table if not exists taller_info (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default '00000000-0000-0000-0000-000000000001',
   nombre text not null,
   direccion text,
   telefono text,
   correo text,
   logo_url text,
-  fecha_actualizacion timestamptz not null default now()
+  fecha_actualizacion timestamptz not null default now(),
+  constraint taller_info_singleton check (id = '00000000-0000-0000-0000-000000000001')
 );
+
+alter table taller_info alter column id set default '00000000-0000-0000-0000-000000000001';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'taller_info_singleton'
+  ) then
+    alter table taller_info
+      add constraint taller_info_singleton
+      check (id = '00000000-0000-0000-0000-000000000001');
+  end if;
+end $$;
 
 alter table taller_info enable row level security;
 

@@ -38,6 +38,8 @@ class AppShell extends ConsumerWidget {
                   logoUrl,
                   width: 24,
                   height: 24,
+                  cacheWidth: 48,
+                  cacheHeight: 48,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => const Icon(Icons.precision_manufacturing_rounded),
                 ),

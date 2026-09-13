@@ -190,6 +190,12 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
       );
       return;
     }
+    if (!_isValidImageContent(bytes, extension)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El archivo no contiene una imagen válida.')),
+      );
+      return;
+    }
 
     setState(() => _uploadingLogo = true);
     try {
@@ -213,6 +219,36 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
     } finally {
       if (mounted) {
         setState(() => _uploadingLogo = false);
+      }
+
+      bool _isValidImageContent(List<int> bytes, String extension) {
+        if (extension == 'png') {
+          return _startsWith(bytes, const [0x89, 0x50, 0x4E, 0x47]);
+        }
+        if (extension == 'jpg' || extension == 'jpeg') {
+          return _startsWith(bytes, const [0xFF, 0xD8, 0xFF]);
+        }
+        if (extension == 'webp') {
+          return _startsWith(bytes, const [0x52, 0x49, 0x46, 0x46]) &&
+              bytes.length > 11 &&
+              bytes[8] == 0x57 &&
+              bytes[9] == 0x45 &&
+              bytes[10] == 0x42 &&
+              bytes[11] == 0x50;
+        }
+        return false;
+      }
+
+      bool _startsWith(List<int> bytes, List<int> signature) {
+        if (bytes.length < signature.length) {
+          return false;
+        }
+        for (var i = 0; i < signature.length; i++) {
+          if (bytes[i] != signature[i]) {
+            return false;
+          }
+        }
+        return true;
       }
     }
   }
@@ -242,6 +278,8 @@ class _LogoPreview extends StatelessWidget {
               fit: BoxFit.cover,
               width: 120,
               height: 120,
+              cacheWidth: 240,
+              cacheHeight: 240,
               errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_rounded, size: 42),
             )
           : const Icon(Icons.business_rounded, size: 42),
