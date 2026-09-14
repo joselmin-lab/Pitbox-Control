@@ -9,7 +9,7 @@ class SupabaseProformaRepository implements ProformaRepository {
   final SupabaseClient _client;
 
   static const _proformasWithItemsSelect =
-      'id,numero,cliente_id,vehiculo_id,fecha,condiciones_pago,validez,tiempo_entrega,tiempo_garantia,forma_pago,estado,total,fecha_creacion,proforma_items(id,tipo_item,referencia_id,descripcion,cantidad,precio_unitario,total)';
+      'id,numero,cliente_id,vehiculo_id,fecha,condiciones_pago,validez,tiempo_entrega,tiempo_garantia,forma_pago,estado,facturado,subtotal,descuento_no_facturado,total,fecha_creacion,proforma_items(id,tipo_item,referencia_id,descripcion,cantidad,precio_unitario,total)';
 
   @override
   Future<List<Proforma>> getAll({
@@ -74,9 +74,14 @@ class SupabaseProformaRepository implements ProformaRepository {
             'tiempo_garantia': _optional(proforma.tiempoGarantia),
             'forma_pago': _optional(proforma.formaPago),
             'estado': _estadoToDb(proforma.estado),
+            'facturado': proforma.facturado,
+            'subtotal': proforma.subtotalFinal,
+            'descuento_no_facturado': proforma.descuentoNoFacturadoFinal,
             'total': proforma.totalFinal,
           })
-          .select('id,numero,cliente_id,vehiculo_id,fecha,condiciones_pago,validez,tiempo_entrega,tiempo_garantia,forma_pago,estado,total,fecha_creacion')
+          .select(
+            'id,numero,cliente_id,vehiculo_id,fecha,condiciones_pago,validez,tiempo_entrega,tiempo_garantia,forma_pago,estado,facturado,subtotal,descuento_no_facturado,total,fecha_creacion',
+          )
           .single();
 
       final created = _fromProformaRow(_row(inserted));
@@ -113,6 +118,9 @@ class SupabaseProformaRepository implements ProformaRepository {
         'p_tiempo_garantia': _optional(proforma.tiempoGarantia),
         'p_forma_pago': _optional(proforma.formaPago),
         'p_estado': _estadoToDb(proforma.estado),
+        'p_facturado': proforma.facturado,
+        'p_subtotal': proforma.subtotalFinal,
+        'p_descuento_no_facturado': proforma.descuentoNoFacturadoFinal,
         'p_total': proforma.totalFinal,
         'p_items': _itemsPayload(proforma.items),
       });
@@ -194,6 +202,9 @@ class SupabaseProformaRepository implements ProformaRepository {
       tiempoGarantia: row['tiempo_garantia'] as String?,
       formaPago: row['forma_pago'] as String?,
       estado: _estadoFromDb(row['estado'] as String? ?? 'borrador'),
+      facturado: row['facturado'] as bool? ?? true,
+      subtotal: (row['subtotal'] as num?)?.toDouble(),
+      descuentoNoFacturado: (row['descuento_no_facturado'] as num?)?.toDouble(),
       total: (row['total'] as num?)?.toDouble(),
       fechaCreacion: _parseDateTime(row['fecha_creacion']),
     );

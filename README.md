@@ -108,6 +108,9 @@ main.dart
 - Módulo Paquetes funcional: listado, detalle, alta, edición, eliminación y asociación dinámica de servicios.
 - Módulo Datos del taller funcional: edición de nombre, dirección, teléfono, correo y logo del taller.
 - Módulo Proformas funcional: listado, creación/edición, vista previa estilo documento y exportación PDF.
+- Módulo Impuestos funcional: configuración de porcentajes IVA e IT.
+- Proformas con tipo Facturado/No facturado y descuento automático por IVA+IT.
+- Bloqueo de creación de proformas nuevas cuando faltan datos del taller.
 - Relación 1:N Cliente → Vehículos en detalle de cliente.
 - Tema global claro con paleta rojo/negro, espaciados y estados interactivos.
 - Componentes reutilizables: botones, cards, badges y tabla.
@@ -131,12 +134,15 @@ main.dart
 - [x] Módulo de Paquetes de servicios (CRUD + selección de servicios + precio dinámico/manual).
 - [x] Módulo de Datos del taller (nombre, dirección, teléfono, correo y logo en Storage).
 - [x] Módulo de Proformas (numeración anual, ítems y exportación PDF).
+- [x] Configuración de Impuestos (IVA e IT) conectada a Supabase.
+- [x] Proformas Facturado/No facturado con desglose de subtotal, descuento y total final.
+- [x] Validación de Datos del Taller antes de crear nuevas proformas.
 - [x] Navegación completa para crear/editar/ver detalle de clientes y vehículos.
 - [x] KPIs de dashboard para totales reales desde repositorio de datos.
 
 ## Conexión a Supabase
 
-Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_servicio_items`, `taller_info`, `proformas`, `proforma_items` y `proforma_contadores` deben crearse antes de usar la app con datos reales.
+Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_servicio_items`, `taller_info`, `configuracion_impuestos`, `proformas`, `proforma_items` y `proforma_contadores` deben crearse antes de usar la app con datos reales.
 
 1. Entra a [supabase.com](https://supabase.com) y abre tu proyecto.
 2. Ve a **SQL Editor**.
@@ -145,12 +151,14 @@ Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_
 5. Luego copia/pega y ejecuta `supabase/schema_servicios.sql` para servicios/paquetes.
 6. Luego copia/pega y ejecuta `supabase/schema_taller.sql` para datos generales del taller.
 7. Luego copia/pega y ejecuta `supabase/schema_proformas.sql` para proformas e ítems.
-8. En **Storage** crea manualmente el bucket público `taller-logos`:
+8. Luego copia/pega y ejecuta `supabase/schema_impuestos.sql` para la configuración de IVA/IT.
+9. Luego copia/pega y ejecuta `supabase/schema_proformas_facturado.sql` para extender proformas con facturado, subtotal, descuento y total histórico.
+10. En **Storage** crea manualmente el bucket público `taller-logos`:
    - Storage → **New bucket**
    - Nombre: `taller-logos`
    - Activar **Public bucket**
    - Guardar
-9. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
+11. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
 
 > El script SQL se ejecuta manualmente desde Supabase (no desde esta app).
 
@@ -167,6 +175,7 @@ La app inicializa Supabase en `main.dart` y los providers inyectan repositorios 
 - `SupabaseServicioRepository`
 - `SupabasePaqueteServicioRepository`
 - `SupabaseTallerRepository`
+- `SupabaseImpuestosRepository`
 - `SupabaseProformaRepository`
 
 ### Numeración de proformas por año
@@ -177,6 +186,14 @@ El script `supabase/schema_proformas.sql` crea la función SQL `generar_siguient
 - Devuelve el formato `XXX-YYYY` (ej. `001-2026`) y reinicia por cada año.
 - `proforma_contadores` no tiene políticas públicas de escritura: el acceso ocurre mediante la función SQL.
 
+### Facturado / No facturado y descuento por IVA+IT
+
+- En el formulario se puede elegir entre **Facturado** y **No facturado**.
+- Si está en **No facturado**, se aplica descuento: `descuento = subtotal * (IVA + IT) / 100`.
+- El resumen muestra `Subtotal`, `Descuento por no facturar` y `Total final` en formulario, detalle y PDF.
+- Para mantener consistencia histórica, `proformas` persiste `facturado`, `subtotal`, `descuento_no_facturado` y `total`.
+- Para crear una proforma nueva se exige tener Datos del Taller configurados (nombre distinto al valor genérico por defecto).
+
 ## Checklist de fase de datos
 
 - [x] Conexión real de Clientes a Supabase.
@@ -184,6 +201,7 @@ El script `supabase/schema_proformas.sql` crea la función SQL `generar_siguient
 - [x] Conexión real de Servicios a Supabase.
 - [x] Conexión real de Paquetes e Items de paquete a Supabase.
 - [x] Conexión real de Datos del taller a Supabase + Storage para logos.
+- [x] Conexión real de Configuración de Impuestos (IVA/IT) a Supabase.
 - [x] Conexión real de Proformas e Items a Supabase (incluye numeración anual atómica).
 - [x] Relación 1:N Cliente → Vehículos persistida con FK en base de datos.
 - [x] Relación N:N Paquetes ↔ Servicios persistida con tabla intermedia.
@@ -205,9 +223,10 @@ Reglas del importador:
 
 ## Siguiente fase recomendada
 
-Implementar **Trabajos** a partir de proformas aceptadas y continuar con trazabilidad operativa:
+Implementar **Trabajos** a partir de proformas aceptadas y robustecer el flujo comercial:
 
 - Crear flujo Proforma aceptada → Orden de trabajo.
 - Vincular avance técnico, repuestos reales usados y mano de obra ejecutada.
+- Consolidar trazabilidad histórica por impuesto si se requiere auditoría separada IVA vs IT por proforma.
 - Conectar Trabajos con Contabilidad para registrar ingresos/costos reales.
 - Habilitar autenticación y endurecer políticas RLS por usuario/rol.

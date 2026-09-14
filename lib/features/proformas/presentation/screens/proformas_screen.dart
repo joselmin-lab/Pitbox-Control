@@ -10,6 +10,8 @@ import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_table.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
+import '../../../configuracion/taller/domain/utils/taller_info_validator.dart';
+import '../../../configuracion/taller/presentation/providers/taller_info_provider.dart';
 import '../../../vehiculos/presentation/providers/vehiculos_provider.dart';
 import '../../domain/models/proforma.dart';
 import '../providers/proformas_provider.dart';
@@ -70,7 +72,7 @@ class _ProformasScreenState extends ConsumerState<ProformasScreen> {
             AppPrimaryButton(
               label: 'Nueva proforma',
               icon: Icons.note_add_rounded,
-              onPressed: () => context.go('/proformas/nueva'),
+              onPressed: _onNuevaProformaPressed,
             ),
           ],
         ),
@@ -106,6 +108,7 @@ class _ProformasScreenState extends ConsumerState<ProformasScreen> {
                     DataColumn(label: Text('Cliente')),
                     DataColumn(label: Text('Vehículo')),
                     DataColumn(label: Text('Fecha')),
+                    DataColumn(label: Text('Tipo')),
                     DataColumn(label: Text('Total')),
                     DataColumn(label: Text('Estado')),
                     DataColumn(label: Text('Acciones')),
@@ -118,6 +121,12 @@ class _ProformasScreenState extends ConsumerState<ProformasScreen> {
                           DataCell(Text(clientesById[proforma.clienteId] ?? '—')),
                           DataCell(Text(vehiculosById[proforma.vehiculoId] ?? '—')),
                           DataCell(Text(_formatDate(proforma.fecha))),
+                          DataCell(
+                            AppBadge(
+                              label: proforma.facturado ? 'Facturado' : 'No facturado',
+                              backgroundColor: proforma.facturado ? AppColors.success : AppColors.warning,
+                            ),
+                          ),
                           DataCell(Text(_formatBs(proforma.totalFinal))),
                           DataCell(
                             AppBadge(
@@ -180,6 +189,47 @@ class _ProformasScreenState extends ConsumerState<ProformasScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo eliminar la proforma.')));
     }
+  }
+
+  Future<void> _onNuevaProformaPressed() async {
+    final tallerInfoAsync = ref.read(tallerInfoProvider);
+    final tallerInfo = tallerInfoAsync.valueOrNull;
+
+    if (tallerInfoAsync.isLoading && tallerInfo == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Cargando datos del taller... intenta nuevamente.')));
+      return;
+    }
+
+    if (tallerInfoPermiteCrearProformas(tallerInfo)) {
+      if (!mounted) return;
+      context.go('/proformas/nueva');
+      return;
+    }
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Configuración requerida'),
+        content: const Text('Debes completar los datos de tu taller antes de crear proformas.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              context.go('/configuracion/taller');
+            },
+            child: const Text('Ir a Datos del Taller'),
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatDate(DateTime value) {

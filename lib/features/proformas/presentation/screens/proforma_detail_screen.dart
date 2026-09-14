@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../clientes/domain/models/cliente.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
 import '../../../configuracion/taller/presentation/providers/taller_info_provider.dart';
+import '../../../configuracion/impuestos/presentation/providers/impuestos_provider.dart';
 import '../../../vehiculos/domain/models/vehiculo.dart';
 import '../../../vehiculos/presentation/providers/vehiculos_provider.dart';
 import '../../domain/utils/numero_a_literal_es.dart';
@@ -27,6 +29,7 @@ class ProformaDetailScreen extends ConsumerWidget {
     final clientes = ref.watch(clientesProvider).valueOrNull ?? const <Cliente>[];
     final vehiculos = ref.watch(vehiculosProvider).valueOrNull ?? const <Vehiculo>[];
     final tallerInfo = ref.watch(tallerInfoProvider).valueOrNull;
+    final impuestos = ref.watch(impuestosProvider).valueOrNull;
 
     if (proforma == null) {
       if (proformasAsync.isLoading) {
@@ -62,6 +65,8 @@ class ProformaDetailScreen extends ConsumerWidget {
                       cliente: cliente,
                       vehiculo: vehiculo,
                       taller: tallerInfo,
+                      porcentajeIva: impuestos?.porcentajeIva ?? 13,
+                      porcentajeIt: impuestos?.porcentajeIt ?? 3,
                     );
                   },
                   icon: const Icon(Icons.picture_as_pdf_rounded),
@@ -84,8 +89,8 @@ class ProformaDetailScreen extends ConsumerWidget {
               child: SizedBox(
                 width: 90,
                 height: 90,
-                child: (tallerInfo?.logoUrl != null && tallerInfo!.logoUrl!.trim().isNotEmpty)
-                    ? Image.network(tallerInfo.logoUrl!, fit: BoxFit.contain)
+                child: ((tallerInfo?.logoUrl ?? '').trim().isNotEmpty)
+                    ? Image.network(tallerInfo?.logoUrl ?? '', fit: BoxFit.contain)
                     : const Icon(Icons.business_rounded, size: 56),
               ),
             ),
@@ -125,6 +130,11 @@ class ProformaDetailScreen extends ConsumerWidget {
                     Text('N° PROFORMA', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.primary)),
                     Text(proforma.numero),
                     const SizedBox(height: AppSpacing.xs),
+                    AppBadge(
+                      label: proforma.facturado ? 'Facturado' : 'No facturado',
+                      backgroundColor: proforma.facturado ? AppColors.success : AppColors.warning,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
                     Text('FECHA', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.primary)),
                     Text(_formatDate(proforma.fecha)),
                   ],
@@ -163,6 +173,17 @@ class ProformaDetailScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text('Subtotal: ${_formatBs(proforma.subtotalFinal)}'),
+            ),
+            if (!proforma.facturado)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'Descuento por no facturar (IVA ${(impuestos?.porcentajeIva ?? 13).toStringAsFixed(2)}% + IT ${(impuestos?.porcentajeIt ?? 3).toStringAsFixed(2)}%): -${_formatBs(proforma.descuentoNoFacturadoFinal)}',
+                ),
+              ),
             Align(
               alignment: Alignment.centerRight,
               child: Text(
@@ -275,7 +296,7 @@ class _ConditionLine extends StatelessWidget {
               text: '$label ',
               style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
             ),
-            TextSpan(text: (value == null || value!.trim().isEmpty) ? '—' : value!.trim()),
+            TextSpan(text: (value == null || value.trim().isEmpty) ? '—' : value.trim()),
           ],
         ),
       ),

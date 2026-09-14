@@ -77,6 +77,24 @@ class ConfiguracionScreen extends StatelessWidget {
                 ),
               ),
             ),
+            SizedBox(
+              width: 360,
+              child: AppSectionCard(
+                title: 'Impuestos',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Configura los porcentajes de IVA e IT para proformas no facturadas.'),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: () => context.go('/configuracion/impuestos'),
+                      icon: const Icon(Icons.percent_rounded),
+                      label: const Text('Abrir impuestos'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ],

@@ -5,6 +5,7 @@ import '../../features/clientes/presentation/screens/cliente_detail_screen.dart'
 import '../../features/clientes/presentation/screens/cliente_form_screen.dart';
 import '../../features/clientes/presentation/screens/clientes_screen.dart';
 import '../../features/configuracion/presentation/screens/configuracion_screen.dart';
+import '../../features/configuracion/impuestos/presentation/screens/impuestos_screen.dart';
 import '../../features/configuracion/servicios/presentation/screens/paquete_servicio_detail_screen.dart';
 import '../../features/configuracion/servicios/presentation/screens/paquete_servicio_form_screen.dart';
 import '../../features/configuracion/servicios/presentation/screens/paquetes_servicios_screen.dart';
@@ -160,6 +161,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: 'taller',
                 name: 'configuracion-taller',
                 builder: (context, state) => const TallerInfoScreen(),
+              ),
+              GoRoute(
+                path: 'impuestos',
+                name: 'configuracion-impuestos',
+                builder: (context, state) => const ImpuestosScreen(),
               ),
             ],
           ),
