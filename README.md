@@ -175,6 +175,7 @@ El script `supabase/schema_proformas.sql` crea la función SQL `generar_siguient
 
 - Usa `upsert` atómico sobre `proforma_contadores` para incrementar el consecutivo sin colisiones.
 - Devuelve el formato `XXX-YYYY` (ej. `001-2026`) y reinicia por cada año.
+- `proforma_contadores` no tiene políticas públicas de escritura: el acceso ocurre mediante la función SQL.
 
 ## Checklist de fase de datos
 

@@ -16,5 +16,12 @@ void main() {
         'Mil quinientos veintitrés 50/100 bolivianos',
       );
     });
+
+    test('redondea y acarrea centavos al entero', () {
+      expect(
+        montoEnLiteralBolivianos(1.999),
+        'Dos 00/100 bolivianos',
+      );
+    });
   });
 }

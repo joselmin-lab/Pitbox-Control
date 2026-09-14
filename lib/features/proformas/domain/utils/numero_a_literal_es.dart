@@ -1,6 +1,7 @@
 String montoEnLiteralBolivianos(double valor) {
-  final entero = valor.floor();
-  final centavos = ((valor - entero) * 100).round().clamp(0, 99);
+  final totalCentavos = (valor * 100).round();
+  final entero = totalCentavos ~/ 100;
+  final centavos = totalCentavos % 100;
   final literal = _numeroALetras(entero);
   final centavosTexto = centavos.toString().padLeft(2, '0');
   return '${_capitalizar(literal)} $centavosTexto/100 bolivianos';

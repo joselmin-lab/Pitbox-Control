@@ -40,6 +40,8 @@ create table if not exists proforma_contadores (
 create or replace function generar_siguiente_numero_proforma(anio_actual integer)
 returns text
 language plpgsql
+security definer
+set search_path = public
 as $$
 declare
   siguiente integer;
@@ -89,7 +91,6 @@ drop policy if exists "Permitir insercion publica proforma_contadores" on profor
 drop policy if exists "Permitir actualizacion publica proforma_contadores" on proforma_contadores;
 drop policy if exists "Permitir eliminacion publica proforma_contadores" on proforma_contadores;
 
-create policy "Permitir lectura publica proforma_contadores" on proforma_contadores for select using (true);
-create policy "Permitir insercion publica proforma_contadores" on proforma_contadores for insert with check (true);
-create policy "Permitir actualizacion publica proforma_contadores" on proforma_contadores for update using (true);
-create policy "Permitir eliminacion publica proforma_contadores" on proforma_contadores for delete using (true);
+-- Sin políticas públicas en `proforma_contadores`:
+-- su acceso se realiza únicamente mediante la función
+-- `generar_siguiente_numero_proforma` (security definer).

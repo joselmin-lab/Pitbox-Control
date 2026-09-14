@@ -191,13 +191,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                           }
                           setState(() {
                             _fecha = selected;
-                            if (proforma == null) {
-                              _numeroProforma = '';
-                            }
                           });
-                          if (proforma == null) {
-                            await _generarNumero();
-                          }
                         },
                   icon: const Icon(Icons.edit_calendar_rounded),
                 ),
