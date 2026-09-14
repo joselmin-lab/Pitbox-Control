@@ -73,7 +73,7 @@ class _RecepcionesScreenState extends ConsumerState<RecepcionesScreen> {
             ),
             AppPrimaryButton(
               label: 'Nueva recepción',
-              icon: Icons.assignment_add_rounded,
+              icon: Icons.note_add_rounded,
               onPressed: () => context.go('/trabajos/recepciones/nueva'),
             ),
           ],
