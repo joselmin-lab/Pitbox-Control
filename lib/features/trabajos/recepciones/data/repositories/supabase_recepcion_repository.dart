@@ -42,6 +42,8 @@ class SupabaseRecepcionRepository implements RecepcionRepository {
       return _rows(rows).map(_fromRow).toList(growable: false);
     } on PostgrestException catch (error) {
       throw StateError('No se pudieron cargar las recepciones: ${error.message}');
+    } on FormatException catch (error) {
+      throw StateError('Datos inválidos de recepciones: ${error.message}');
     }
   }
 
@@ -55,6 +57,8 @@ class SupabaseRecepcionRepository implements RecepcionRepository {
       return _fromRow(_row(row));
     } on PostgrestException catch (error) {
       throw StateError('No se pudo cargar la recepción $id: ${error.message}');
+    } on FormatException catch (error) {
+      throw StateError('Datos inválidos de recepción: ${error.message}');
     }
   }
 
@@ -68,6 +72,8 @@ class SupabaseRecepcionRepository implements RecepcionRepository {
       return _fromRow(_row(inserted));
     } on PostgrestException catch (error) {
       throw StateError('No se pudo crear la recepción: ${error.message}');
+    } on FormatException catch (error) {
+      throw StateError('Datos inválidos al crear la recepción: ${error.message}');
     }
   }
 
@@ -86,6 +92,8 @@ class SupabaseRecepcionRepository implements RecepcionRepository {
       return _fromRow(_row(updated));
     } on PostgrestException catch (error) {
       throw StateError('No se pudo actualizar la recepción ${recepcion.id}: ${error.message}');
+    } on FormatException catch (error) {
+      throw StateError('Datos inválidos al actualizar la recepción: ${error.message}');
     }
   }
 

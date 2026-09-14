@@ -57,8 +57,9 @@ extension RecepcionVistaVehiculoX on RecepcionVistaVehiculo {
       case 'detras':
         return RecepcionVistaVehiculo.detras;
       case 'izquierdo':
-      default:
         return RecepcionVistaVehiculo.izquierdo;
+      default:
+        throw FormatException('Vista de vehículo inválida: $value');
     }
   }
 }

@@ -54,6 +54,25 @@ void main() {
     expect(container.read(recepcionesProvider).valueOrNull!.single.estado, RecepcionEstado.vehiculoEntregado);
   });
 
+  test('editar actualiza recepción y recarga listado', () async {
+    final original = _sampleRecepcion(id: 'r1', numero: '001-2026');
+    final repository = _RecepcionRepositoryFake([original]);
+    final container = _buildContainer(repository);
+    addTearDown(container.dispose);
+
+    await container.read(recepcionesProvider.future);
+    final updated = await container.read(recepcionesProvider.notifier).editar(
+          original.copyWith(
+            observaciones: 'Actualizado',
+            kilometraje: '125000',
+          ),
+        );
+
+    expect(updated.observaciones, 'Actualizado');
+    expect(updated.kilometraje, '125000');
+    expect(container.read(recepcionesProvider).valueOrNull!.single.observaciones, 'Actualizado');
+  });
+
   test('recepcionFormProvider administra daños y firmas locales', () {
     final container = _buildContainer(_RecepcionRepositoryFake([]));
     addTearDown(container.dispose);
