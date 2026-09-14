@@ -20,10 +20,16 @@ class ImpuestosNotifier extends AsyncNotifier<ConfiguracionImpuestos> {
     required double porcentajeIva,
     required double porcentajeIt,
   }) async {
-    final saved = await _repository.guardar(
-      porcentajeIva: porcentajeIva,
-      porcentajeIt: porcentajeIt,
-    );
-    state = AsyncData(saved);
+    state = const AsyncLoading<ConfiguracionImpuestos>().copyWithPrevious(state);
+    try {
+      final saved = await _repository.guardar(
+        porcentajeIva: porcentajeIva,
+        porcentajeIt: porcentajeIt,
+      );
+      state = AsyncData(saved);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
 }

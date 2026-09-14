@@ -8,13 +8,14 @@ class SupabaseImpuestosRepository implements ImpuestosRepository {
 
   final SupabaseClient _client;
   static const _table = 'configuracion_impuestos';
+  static const _singletonId = '00000000-0000-0000-0000-000000000002';
 
   @override
   Future<ConfiguracionImpuestos> getInfo() async {
     try {
-      final row = await _client.from(_table).select().limit(1).maybeSingle();
+      final row = await _client.from(_table).select().eq('id', _singletonId).maybeSingle();
       if (row == null) {
-        return ConfiguracionImpuestos.porDefecto();
+        return ConfiguracionImpuestos.porDefecto().copyWith(id: _singletonId);
       }
       return _fromRow(_row(row));
     } on PostgrestException catch (error) {
@@ -28,24 +29,17 @@ class SupabaseImpuestosRepository implements ImpuestosRepository {
     required double porcentajeIt,
   }) async {
     try {
-      final actual = await _client.from(_table).select('id').limit(1).maybeSingle();
       final now = DateTime.now().toUtc().toIso8601String();
-      final payload = {
-        'porcentaje_iva': porcentajeIva,
-        'porcentaje_it': porcentajeIt,
-        'fecha_actualizacion': now,
-      };
-
-      final response = actual == null
-          ? await _client.from(_table).insert(payload).select().single()
-          : await _client
-              .from(_table)
-              .upsert({
-                ...payload,
-                'id': actual['id'],
-              }, onConflict: 'id')
-              .select()
-              .single();
+      final response = await _client
+          .from(_table)
+          .upsert({
+            'id': _singletonId,
+            'porcentaje_iva': porcentajeIva,
+            'porcentaje_it': porcentajeIt,
+            'fecha_actualizacion': now,
+          }, onConflict: 'id')
+          .select()
+          .single();
 
       return _fromRow(_row(response));
     } on PostgrestException catch (error) {

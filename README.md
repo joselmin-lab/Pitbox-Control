@@ -192,7 +192,7 @@ El script `supabase/schema_proformas.sql` crea la función SQL `generar_siguient
 - Si está en **No facturado**, se aplica descuento: `descuento = subtotal * (IVA + IT) / 100`.
 - El resumen muestra `Subtotal`, `Descuento por no facturar` y `Total final` en formulario, detalle y PDF.
 - Para mantener consistencia histórica, `proformas` persiste `facturado`, `subtotal`, `descuento_no_facturado` y `total`.
-- Para crear una proforma nueva se exige tener Datos del Taller configurados (nombre distinto al valor genérico por defecto).
+- Para crear una proforma nueva se exige tener Datos del Taller configurados con `nombre` y al menos `telefono` o `correo`.
 
 ## Checklist de fase de datos
 

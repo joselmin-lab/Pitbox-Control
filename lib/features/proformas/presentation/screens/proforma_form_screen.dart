@@ -9,6 +9,7 @@ import '../../../../shared/widgets/app_table.dart';
 import '../../../clientes/domain/models/cliente.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
 import '../../../configuracion/impuestos/domain/models/configuracion_impuestos.dart';
+import '../../../configuracion/impuestos/domain/utils/impuestos_validator.dart';
 import '../../../configuracion/impuestos/presentation/providers/impuestos_provider.dart';
 import '../../../configuracion/servicios/domain/models/paquete_servicio.dart';
 import '../../../configuracion/servicios/domain/models/servicio.dart';
@@ -96,7 +97,6 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     final proforma = proformaId == null ? null : ref.watch(proformaByIdProvider(proformaId));
     final tallerInfoAsync = ref.watch(tallerInfoProvider);
     final impuestosAsync = ref.watch(impuestosProvider);
-    final impuestos = impuestosAsync.valueOrNull ?? ConfiguracionImpuestos.porDefecto();
 
     final clientesAsync = ref.watch(clientesProvider);
     final clientes = clientesAsync.valueOrNull ?? const <Cliente>[];
@@ -126,6 +126,14 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     if (paquetesAsync.hasError) {
       return Center(child: Text('Error al cargar paquetes: ${paquetesAsync.error}'));
     }
+    if (impuestosAsync.isLoading && impuestosAsync.valueOrNull == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (impuestosAsync.hasError && impuestosAsync.valueOrNull == null) {
+      return Center(child: Text('Error al cargar impuestos: ${impuestosAsync.error}'));
+    }
+
+    final impuestos = impuestosAsync.valueOrNull ?? ConfiguracionImpuestos.porDefecto();
 
     if (proformaId != null && proforma == null) {
       if (proformasAsync.isLoading) {
@@ -139,6 +147,9 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
 
     if (proformaId == null) {
       final tallerInfo = tallerInfoAsync.valueOrNull;
+      if (tallerInfoAsync.hasError) {
+        return Center(child: Text('Error al validar datos del taller: ${tallerInfoAsync.error}'));
+      }
       if (tallerInfoAsync.isLoading && tallerInfo == null) {
         return const Center(child: CircularProgressIndicator());
       }
@@ -645,9 +656,37 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    if (widget.proformaId == null) {
+      final tallerInfoAsync = ref.read(tallerInfoProvider);
+      if (tallerInfoAsync.isLoading && tallerInfoAsync.valueOrNull == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cargando datos del taller... intenta nuevamente.')),
+        );
+        return;
+      }
+      if (!tallerInfoPermiteCrearProformas(tallerInfoAsync.valueOrNull)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Debes completar los datos de tu taller antes de crear proformas.')),
+        );
+        return;
+      }
+    }
     if (_items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes agregar al menos un ítem.')),
+      );
+      return;
+    }
+    final impuestosAsync = ref.read(impuestosProvider);
+    if (impuestosAsync.isLoading && impuestosAsync.valueOrNull == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cargando configuración de impuestos... intenta nuevamente.')),
+      );
+      return;
+    }
+    if (impuestosAsync.hasError && impuestosAsync.valueOrNull == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo cargar la configuración de impuestos.')),
       );
       return;
     }
@@ -661,9 +700,17 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     }
 
     setState(() => _saving = true);
-    final impuestos = ref.read(impuestosProvider).valueOrNull ?? ConfiguracionImpuestos.porDefecto();
+    final impuestos = impuestosAsync.valueOrNull ?? ConfiguracionImpuestos.porDefecto();
+    final errorSumaImpuestos = validarSumaImpuestos(
+      porcentajeIva: impuestos.porcentajeIva,
+      porcentajeIt: impuestos.porcentajeIt,
+    );
     final subtotal = _items.fold<double>(0, (sum, item) => sum + item.total);
     final descuento = _facturado ? 0.0 : subtotal * ((impuestos.porcentajeIva + impuestos.porcentajeIt) / 100);
+    if (!_facturado && errorSumaImpuestos != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorSumaImpuestos)));
+      return;
+    }
     final totalFinal = subtotal - descuento;
     final current = widget.proformaId == null ? null : _editingProforma;
     if (widget.proformaId != null && current == null) {

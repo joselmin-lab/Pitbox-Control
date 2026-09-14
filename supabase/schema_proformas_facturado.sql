@@ -13,15 +13,18 @@ alter table proformas
   add column if not exists descuento_no_facturado numeric(12,2) not null default 0;
 
 update proformas
-set subtotal = coalesce(total, 0)
-where subtotal is null or subtotal = 0;
-
-update proformas
-set descuento_no_facturado = 0
-where descuento_no_facturado is null;
+set
+  subtotal = coalesce(total, 0),
+  descuento_no_facturado = 0
+where subtotal = 0
+  and descuento_no_facturado = 0
+  and coalesce(total, 0) <> 0;
 
 drop function if exists actualizar_proforma_con_items(
   uuid, uuid, uuid, date, text, text, text, text, text, text, numeric, jsonb
+);
+drop function if exists actualizar_proforma_con_items(
+  uuid, uuid, uuid, date, text, text, text, text, text, text, boolean, numeric, numeric, numeric, jsonb
 );
 
 create or replace function actualizar_proforma_con_items(
@@ -58,10 +61,10 @@ begin
     tiempo_garantia = p_tiempo_garantia,
     forma_pago = p_forma_pago,
     estado = p_estado,
-    facturado = coalesce(p_facturado, true),
-    subtotal = coalesce(p_subtotal, 0),
-    descuento_no_facturado = coalesce(p_descuento_no_facturado, 0),
-    total = coalesce(p_total, 0)
+    facturado = coalesce(p_facturado, facturado),
+    subtotal = coalesce(p_subtotal, subtotal),
+    descuento_no_facturado = coalesce(p_descuento_no_facturado, descuento_no_facturado),
+    total = coalesce(p_total, total)
   where id = p_id;
 
   if not found then

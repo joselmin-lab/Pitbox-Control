@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../shared/widgets/app_button.dart';
 import '../../../../../shared/widgets/app_card.dart';
+import '../../domain/utils/impuestos_validator.dart';
 import '../providers/impuestos_provider.dart';
 
 class ImpuestosScreen extends ConsumerStatefulWidget {
@@ -20,9 +21,21 @@ class _ImpuestosScreenState extends ConsumerState<ImpuestosScreen> {
 
   bool _initialized = false;
   bool _saving = false;
+  DateTime? _lastSyncedAt;
+  bool _isDirty = false;
+  bool _isSyncingControllers = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ivaController.addListener(_markDirtyOnUserEdit);
+    _itController.addListener(_markDirtyOnUserEdit);
+  }
 
   @override
   void dispose() {
+    _ivaController.removeListener(_markDirtyOnUserEdit);
+    _itController.removeListener(_markDirtyOnUserEdit);
     _ivaController.dispose();
     _itController.dispose();
     super.dispose();
@@ -33,10 +46,16 @@ class _ImpuestosScreenState extends ConsumerState<ImpuestosScreen> {
     final impuestosAsync = ref.watch(impuestosProvider);
     final impuestos = impuestosAsync.valueOrNull;
 
-    if (!_initialized && impuestos != null) {
+    final canResync =
+        impuestos != null && (!_initialized || (!_isDirty && _lastSyncedAt != impuestos.fechaActualizacion));
+    if (canResync) {
+      _isSyncingControllers = true;
       _ivaController.text = impuestos.porcentajeIva.toStringAsFixed(2);
       _itController.text = impuestos.porcentajeIt.toStringAsFixed(2);
+      _lastSyncedAt = impuestos.fechaActualizacion;
       _initialized = true;
+      _isDirty = false;
+      _isSyncingControllers = false;
     }
 
     if (impuestosAsync.isLoading && impuestos == null) {
@@ -58,14 +77,14 @@ class _ImpuestosScreenState extends ConsumerState<ImpuestosScreen> {
                 controller: _ivaController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'IVA (%)'),
-                validator: _validatePercentage,
+                validator: validarPorcentajeImpuesto,
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _itController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'IT (%)'),
-                validator: _validatePercentage,
+                validator: validarPorcentajeImpuesto,
               ),
               const SizedBox(height: AppSpacing.lg),
               AppPrimaryButton(
@@ -85,8 +104,13 @@ class _ImpuestosScreenState extends ConsumerState<ImpuestosScreen> {
       return;
     }
 
-    final iva = double.parse(_ivaController.text.replaceAll(',', '.').trim());
-    final it = double.parse(_itController.text.replaceAll(',', '.').trim());
+    final iva = parsePorcentajeImpuesto(_ivaController.text)!;
+    final it = parsePorcentajeImpuesto(_itController.text)!;
+    final errorSuma = validarSumaImpuestos(porcentajeIva: iva, porcentajeIt: it);
+    if (errorSuma != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorSuma)));
+      return;
+    }
 
     setState(() => _saving = true);
     try {
@@ -100,6 +124,7 @@ class _ImpuestosScreenState extends ConsumerState<ImpuestosScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Impuestos guardados correctamente.')),
       );
+      _isDirty = false;
     } catch (_) {
       if (!mounted) {
         return;
@@ -114,14 +139,11 @@ class _ImpuestosScreenState extends ConsumerState<ImpuestosScreen> {
     }
   }
 
-  String? _validatePercentage(String? value) {
-    final parsed = double.tryParse((value ?? '').replaceAll(',', '.').trim());
-    if (parsed == null) {
-      return 'Ingresa un valor numérico válido.';
+  void _markDirtyOnUserEdit() {
+    if (_isSyncingControllers || _isDirty || !mounted) {
+      return;
     }
-    if (parsed < 0 || parsed > 100) {
-      return 'El valor debe estar entre 0 y 100.';
-    }
-    return null;
+    setState(() => _isDirty = true);
   }
+
 }

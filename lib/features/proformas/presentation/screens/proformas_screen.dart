@@ -202,6 +202,13 @@ class _ProformasScreenState extends ConsumerState<ProformasScreen> {
       ).showSnackBar(const SnackBar(content: Text('Cargando datos del taller... intenta nuevamente.')));
       return;
     }
+    if (tallerInfoAsync.hasError && tallerInfo == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No se pudo validar los datos del taller.')));
+      return;
+    }
 
     if (tallerInfoPermiteCrearProformas(tallerInfo)) {
       if (!mounted) return;
