@@ -30,7 +30,7 @@ String _numeroALetras(int numero) {
     if (restoTrasMilesDeMillones > 0) {
       partes.add(_numeroALetras(restoTrasMilesDeMillones));
     }
-    return partes.join(' ').replaceAll(RegExp(r'\\s+'), ' ').trim();
+    return partes.join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
   final millones = numero ~/ 1000000;

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -13,6 +15,21 @@ class ProformaPdfExporter {
   const ProformaPdfExporter._();
 
   static Future<void> exportar({
+    required Proforma proforma,
+    required Cliente? cliente,
+    required Vehiculo? vehiculo,
+    required TallerInfo? taller,
+  }) async {
+    final bytes = await generarBytes(
+      proforma: proforma,
+      cliente: cliente,
+      vehiculo: vehiculo,
+      taller: taller,
+    );
+    await Printing.layoutPdf(onLayout: (_) async => bytes);
+  }
+
+  static Future<Uint8List> generarBytes({
     required Proforma proforma,
     required Cliente? cliente,
     required Vehiculo? vehiculo,
@@ -144,7 +161,7 @@ class ProformaPdfExporter {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (_) async => pdf.save());
+    return pdf.save();
   }
 
   static pw.Widget _label(String value) {

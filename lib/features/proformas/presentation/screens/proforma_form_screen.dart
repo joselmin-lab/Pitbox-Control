@@ -283,7 +283,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
                 key: ValueKey('${_selectedClienteId ?? ''}-${_selectedVehiculoId ?? ''}'),
-                initialValue: vehiculosDelCliente.any((item) => item.id == _selectedVehiculoId) ? _selectedVehiculoId : null,
+                value: vehiculosDelCliente.any((item) => item.id == _selectedVehiculoId) ? _selectedVehiculoId : null,
                 decoration: const InputDecoration(labelText: 'Vehículo *'),
                 items: [
                   for (final vehiculo in vehiculosDelCliente)
@@ -314,7 +314,16 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                 options: servicios,
                 optionLabel: (servicio) => '${servicio.nombre} · ${_formatBs(servicio.precio)}',
                 onSelected: (servicio) => _servicioSeleccionado = servicio,
-                onTextChanged: (_) => _servicioSeleccionado = null,
+                onTextChanged: (value) {
+                  final selected = _servicioSeleccionado;
+                  if (selected == null) {
+                    return;
+                  }
+                  final expected = '${selected.nombre} · ${_formatBs(selected.precio)}';
+                  if (value.trim() != expected.trim()) {
+                    _servicioSeleccionado = null;
+                  }
+                },
                 onAdd: () {
                   final servicio = _servicioSeleccionado;
                   if (servicio == null) {
@@ -345,7 +354,16 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                 options: paquetes,
                 optionLabel: (paquete) => '${paquete.nombre} · ${_formatBs(paquete.precioTotalCalculado)}',
                 onSelected: (paquete) => _paqueteSeleccionado = paquete,
-                onTextChanged: (_) => _paqueteSeleccionado = null,
+                onTextChanged: (value) {
+                  final selected = _paqueteSeleccionado;
+                  if (selected == null) {
+                    return;
+                  }
+                  final expected = '${selected.nombre} · ${_formatBs(selected.precioTotalCalculado)}';
+                  if (value.trim() != expected.trim()) {
+                    _paqueteSeleccionado = null;
+                  }
+                },
                 onAdd: () {
                   final paquete = _paqueteSeleccionado;
                   if (paquete == null) {
