@@ -787,9 +787,14 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
     if (boundary == null) {
       return null;
     }
-    final image = await boundary.toImage(pixelRatio: 2);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    return bytes?.buffer.asUint8List();
+    ui.Image? image;
+    try {
+      image = await boundary.toImage(pixelRatio: 2);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      return bytes?.buffer.asUint8List();
+    } finally {
+      image?.dispose();
+    }
   }
 
   void _setClienteFieldText(String value) {

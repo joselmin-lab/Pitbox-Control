@@ -17,19 +17,7 @@ final recepcionesProvider = AsyncNotifierProvider<RecepcionesNotifier, List<Rece
 });
 
 final recepcionesFiltradasProvider = Provider<List<RecepcionVehiculo>>((ref) {
-  final recepciones = ref.watch(recepcionesProvider).valueOrNull ?? const <RecepcionVehiculo>[];
-  final estado = ref.watch(recepcionesEstadoFilterProvider);
-  final clienteId = ref.watch(recepcionesClienteFilterProvider);
-  final dateRange = ref.watch(recepcionesDateRangeFilterProvider);
-
-  return recepciones.where((recepcion) {
-    final matchesEstado = estado == null || recepcion.estado == estado;
-    final matchesCliente = clienteId == null || clienteId.isEmpty || recepcion.clienteId == clienteId;
-    final matchesDate = dateRange == null ||
-        (!recepcion.fechaIngreso.isBefore(_startOfDay(dateRange.start)) &&
-            !recepcion.fechaIngreso.isAfter(_endOfDay(dateRange.end)));
-    return matchesEstado && matchesCliente && matchesDate;
-  }).toList(growable: false);
+  return ref.watch(recepcionesProvider).valueOrNull ?? const <RecepcionVehiculo>[];
 });
 
 final recepcionByIdProvider = Provider.family<RecepcionVehiculo?, String>((ref, recepcionId) {
@@ -48,11 +36,25 @@ final recepcionFormProvider =
 class RecepcionesNotifier extends AsyncNotifier<List<RecepcionVehiculo>> {
   @override
   Future<List<RecepcionVehiculo>> build() async {
-    return ref.read(recepcionRepositoryProvider).getAll();
+    final dateRange = ref.watch(recepcionesDateRangeFilterProvider);
+    return _fetchRecepciones(
+      estado: ref.watch(recepcionesEstadoFilterProvider),
+      clienteId: ref.watch(recepcionesClienteFilterProvider),
+      fechaDesde: dateRange == null ? null : _startOfDay(dateRange.start),
+      fechaHasta: dateRange == null ? null : _endOfDay(dateRange.end),
+    );
   }
 
   Future<void> reload() async {
-    state = await AsyncValue.guard(() => ref.read(recepcionRepositoryProvider).getAll());
+    final dateRange = ref.read(recepcionesDateRangeFilterProvider);
+    state = await AsyncValue.guard(
+      () => _fetchRecepciones(
+        estado: ref.read(recepcionesEstadoFilterProvider),
+        clienteId: ref.read(recepcionesClienteFilterProvider),
+        fechaDesde: dateRange == null ? null : _startOfDay(dateRange.start),
+        fechaHasta: dateRange == null ? null : _endOfDay(dateRange.end),
+      ),
+    );
   }
 
   Future<RecepcionVehiculo> crear(RecepcionVehiculo recepcion) async {
@@ -72,6 +74,20 @@ class RecepcionesNotifier extends AsyncNotifier<List<RecepcionVehiculo>> {
     required RecepcionEstado estado,
   }) async {
     return editar(recepcion.copyWith(estado: estado));
+  }
+
+  Future<List<RecepcionVehiculo>> _fetchRecepciones({
+    required RecepcionEstado? estado,
+    required String? clienteId,
+    required DateTime? fechaDesde,
+    required DateTime? fechaHasta,
+  }) {
+    return ref.read(recepcionRepositoryProvider).getAll(
+          estado: estado,
+          clienteId: clienteId,
+          fechaDesde: fechaDesde,
+          fechaHasta: fechaHasta,
+        );
   }
 }
 
@@ -186,8 +202,17 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
   }
 
   void addFotografiasPendientes(List<RecepcionArchivoLocal> fotos) {
+    final existingKeys = {
+      for (final foto in state.fotografiasPendientes) foto.clave,
+    };
+    final nuevas = <RecepcionArchivoLocal>[];
+    for (final foto in fotos) {
+      if (existingKeys.add(foto.clave)) {
+        nuevas.add(foto);
+      }
+    }
     state = state.copyWith(
-      fotografiasPendientes: [...state.fotografiasPendientes, ...fotos],
+      fotografiasPendientes: [...state.fotografiasPendientes, ...nuevas],
     );
   }
 
@@ -240,6 +265,8 @@ class RecepcionArchivoLocal {
   final String id;
   final String nombreArchivo;
   final Uint8List bytes;
+
+  String get clave => '$nombreArchivo:${bytes.length}';
 }
 
 class RecepcionFormState {

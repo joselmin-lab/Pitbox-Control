@@ -38,6 +38,20 @@ void main() {
     expect(repository.generatedYears, [2026]);
   });
 
+  test('crear conserva número manual y no genera consecutivo nuevo', () async {
+    final repository = _RecepcionRepositoryFake([]);
+    final container = _buildContainer(repository);
+    addTearDown(container.dispose);
+
+    await container.read(recepcionesProvider.future);
+    final created = await container.read(recepcionesProvider.notifier).crear(
+          _sampleRecepcion(id: '', numero: '999-2026'),
+        );
+
+    expect(created.numero, '999-2026');
+    expect(repository.generatedYears, isEmpty);
+  });
+
   test('cambiarEstado persiste actualización', () async {
     final original = _sampleRecepcion(id: 'r1', numero: '001-2026');
     final repository = _RecepcionRepositoryFake([original]);

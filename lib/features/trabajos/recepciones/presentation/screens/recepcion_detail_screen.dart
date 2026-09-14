@@ -59,12 +59,21 @@ class RecepcionDetailScreen extends ConsumerWidget {
                 ),
                 OutlinedButton.icon(
                   onPressed: () async {
-                    await RecepcionPdfExporter.exportar(
-                      recepcion: recepcion,
-                      cliente: cliente,
-                      vehiculo: vehiculo,
-                      taller: tallerInfo,
-                    );
+                    try {
+                      await RecepcionPdfExporter.exportar(
+                        recepcion: recepcion,
+                        cliente: cliente,
+                        vehiculo: vehiculo,
+                        taller: tallerInfo,
+                      );
+                    } catch (_) {
+                      if (!context.mounted) {
+                        return;
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No se pudo exportar la recepción a PDF.')),
+                      );
+                    }
                   },
                   icon: const Icon(Icons.picture_as_pdf_rounded),
                   label: const Text('Exportar PDF'),
