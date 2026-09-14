@@ -286,6 +286,8 @@ class _ConditionLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final trimmedValue = value?.trim();
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: RichText(
@@ -296,7 +298,7 @@ class _ConditionLine extends StatelessWidget {
               text: '$label ',
               style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
             ),
-            TextSpan(text: (value == null || value.trim().isEmpty) ? '—' : value.trim()),
+            TextSpan(text: (trimmedValue == null || trimmedValue.isEmpty) ? '—' : trimmedValue),
           ],
         ),
       ),
