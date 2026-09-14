@@ -55,7 +55,7 @@ class ProformaPdfExporter {
             pw.SizedBox(height: 6),
             pw.Center(
               child: pw.Text(
-                [taller?.direccion, taller?.telefono, taller?.correo].where((item) => item != null && item!.isNotEmpty).join(' · '),
+                [taller?.direccion, taller?.telefono, taller?.correo].where((item) => item != null && item.isNotEmpty).join(' · '),
                 style: const pw.TextStyle(fontSize: 9),
                 textAlign: pw.TextAlign.center,
               ),

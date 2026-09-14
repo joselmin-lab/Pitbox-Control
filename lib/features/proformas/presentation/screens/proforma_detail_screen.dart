@@ -93,7 +93,7 @@ class ProformaDetailScreen extends ConsumerWidget {
             Center(
               child: Text(
                 [tallerInfo?.direccion, tallerInfo?.telefono, tallerInfo?.correo]
-                    .where((value) => value != null && value!.trim().isNotEmpty)
+                    .where((value) => value != null && value.trim().isNotEmpty)
                     .join(' · '),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
