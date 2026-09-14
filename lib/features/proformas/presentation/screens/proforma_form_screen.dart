@@ -314,6 +314,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                 options: servicios,
                 optionLabel: (servicio) => '${servicio.nombre} · ${_formatBs(servicio.precio)}',
                 onSelected: (servicio) => _servicioSeleccionado = servicio,
+                onTextChanged: (_) => _servicioSeleccionado = null,
                 onAdd: () {
                   final servicio = _servicioSeleccionado;
                   if (servicio == null) {
@@ -344,6 +345,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                 options: paquetes,
                 optionLabel: (paquete) => '${paquete.nombre} · ${_formatBs(paquete.precioTotalCalculado)}',
                 onSelected: (paquete) => _paqueteSeleccionado = paquete,
+                onTextChanged: (_) => _paqueteSeleccionado = null,
                 onAdd: () {
                   final paquete = _paqueteSeleccionado;
                   if (paquete == null) {
@@ -722,6 +724,7 @@ class _CatalogAddField<T> extends StatelessWidget {
     required this.options,
     required this.optionLabel,
     required this.onSelected,
+    required this.onTextChanged,
     required this.onAdd,
   });
 
@@ -731,6 +734,7 @@ class _CatalogAddField<T> extends StatelessWidget {
   final List<T> options;
   final String Function(T) optionLabel;
   final void Function(T) onSelected;
+  final ValueChanged<String> onTextChanged;
   final VoidCallback onAdd;
 
   @override
@@ -757,6 +761,7 @@ class _CatalogAddField<T> extends StatelessWidget {
                 controller: textEditingController,
                 focusNode: focusNode,
                 decoration: InputDecoration(labelText: label),
+                onChanged: onTextChanged,
               );
             },
                 optionsViewBuilder: (context, onSelected, options) {

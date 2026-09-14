@@ -102,29 +102,20 @@ class SupabaseProformaRepository implements ProformaRepository {
   @override
   Future<Proforma> update(Proforma proforma) async {
     try {
-      final row = await _client
-          .from('proformas')
-          .update({
-            'cliente_id': proforma.clienteId,
-            'vehiculo_id': proforma.vehiculoId,
-            'fecha': _dateOnlyIso(proforma.fecha),
-            'condiciones_pago': _optional(proforma.condicionesPago),
-            'validez': _optional(proforma.validez),
-            'tiempo_entrega': _optional(proforma.tiempoEntrega),
-            'tiempo_garantia': _optional(proforma.tiempoGarantia),
-            'forma_pago': _optional(proforma.formaPago),
-            'estado': _estadoToDb(proforma.estado),
-            'total': proforma.totalFinal,
-          })
-          .eq('id', proforma.id)
-          .select('id')
-          .maybeSingle();
-
-      if (row == null) {
-        throw StateError('Proforma no encontrada: ${proforma.id}');
-      }
-
-      await _replaceItems(proformaId: proforma.id, items: proforma.items);
+      await _client.rpc('actualizar_proforma_con_items', params: {
+        'p_id': proforma.id,
+        'p_cliente_id': proforma.clienteId,
+        'p_vehiculo_id': proforma.vehiculoId,
+        'p_fecha': _dateOnlyIso(proforma.fecha),
+        'p_condiciones_pago': _optional(proforma.condicionesPago),
+        'p_validez': _optional(proforma.validez),
+        'p_tiempo_entrega': _optional(proforma.tiempoEntrega),
+        'p_tiempo_garantia': _optional(proforma.tiempoGarantia),
+        'p_forma_pago': _optional(proforma.formaPago),
+        'p_estado': _estadoToDb(proforma.estado),
+        'p_total': proforma.totalFinal,
+        'p_items': _itemsPayload(proforma.items),
+      });
       final updated = await getById(proforma.id);
       if (updated == null) {
         throw StateError('No se pudo recargar la proforma actualizada.');
@@ -165,7 +156,14 @@ class SupabaseProformaRepository implements ProformaRepository {
   }
 
   Future<void> _replaceItems({required String proformaId, required List<ProformaItem> items}) async {
-    final payload = items
+    await _client.rpc('reemplazar_items_proforma', params: {
+      'p_proforma_id': proformaId,
+      'p_items': _itemsPayload(items),
+    });
+  }
+
+  List<Map<String, dynamic>> _itemsPayload(List<ProformaItem> items) {
+    return items
         .map(
           (item) => {
             'tipo_item': _tipoToDb(item.tipoItem),
@@ -177,11 +175,6 @@ class SupabaseProformaRepository implements ProformaRepository {
           },
         )
         .toList(growable: false);
-
-    await _client.rpc('reemplazar_items_proforma', params: {
-      'p_proforma_id': proformaId,
-      'p_items': payload,
-    });
   }
 
   Proforma _fromProformaRow(Map<String, dynamic> row) {

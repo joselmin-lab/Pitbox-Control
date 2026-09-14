@@ -100,11 +100,56 @@ begin
 end;
 $$;
 
+create or replace function actualizar_proforma_con_items(
+  p_id uuid,
+  p_cliente_id uuid,
+  p_vehiculo_id uuid,
+  p_fecha date,
+  p_condiciones_pago text,
+  p_validez text,
+  p_tiempo_entrega text,
+  p_tiempo_garantia text,
+  p_forma_pago text,
+  p_estado text,
+  p_total numeric,
+  p_items jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update proformas
+  set
+    cliente_id = p_cliente_id,
+    vehiculo_id = p_vehiculo_id,
+    fecha = p_fecha,
+    condiciones_pago = p_condiciones_pago,
+    validez = p_validez,
+    tiempo_entrega = p_tiempo_entrega,
+    tiempo_garantia = p_tiempo_garantia,
+    forma_pago = p_forma_pago,
+    estado = p_estado,
+    total = p_total
+  where id = p_id;
+
+  if not found then
+    raise exception 'Proforma no encontrada: %', p_id;
+  end if;
+
+  perform reemplazar_items_proforma(p_id, p_items);
+end;
+$$;
+
 revoke all on function generar_siguiente_numero_proforma(integer) from public;
 grant execute on function generar_siguiente_numero_proforma(integer) to anon, authenticated, service_role;
 
 revoke all on function reemplazar_items_proforma(uuid, jsonb) from public;
 grant execute on function reemplazar_items_proforma(uuid, jsonb) to anon, authenticated, service_role;
+
+revoke all on function actualizar_proforma_con_items(uuid, uuid, uuid, date, text, text, text, text, text, text, numeric, jsonb) from public;
+grant execute on function actualizar_proforma_con_items(uuid, uuid, uuid, date, text, text, text, text, text, text, numeric, jsonb) to anon, authenticated, service_role;
 
 alter table proformas enable row level security;
 alter table proforma_items enable row level security;
