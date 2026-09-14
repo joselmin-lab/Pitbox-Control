@@ -106,6 +106,7 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
       clienteId: clienteId,
       clearClienteId: clienteId == null,
       clearVehiculoId: shouldClearVehiculo,
+      kilometraje: shouldClearVehiculo ? '' : state.kilometraje,
     );
   }
 
@@ -118,7 +119,12 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
   }
 
   void setFechaIngreso(DateTime value) {
-    state = state.copyWith(fechaIngreso: value);
+    final fechaSalidaActual = state.fechaSalidaEstimada;
+    state = state.copyWith(
+      fechaIngreso: value,
+      fechaSalidaEstimada: fechaSalidaActual != null && fechaSalidaActual.isBefore(value) ? value : fechaSalidaActual,
+      clearFechaSalidaEstimada: fechaSalidaActual == null,
+    );
   }
 
   void setFechaSalidaEstimada(DateTime? value) {

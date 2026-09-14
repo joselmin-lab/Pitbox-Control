@@ -25,10 +25,27 @@ class RecepcionDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recepcionesAsync = ref.watch(recepcionesProvider);
+    final clientesAsync = ref.watch(clientesProvider);
+    final vehiculosAsync = ref.watch(vehiculosProvider);
+    final tallerInfoAsync = ref.watch(tallerInfoProvider);
     final recepcion = ref.watch(recepcionByIdProvider(recepcionId));
-    final clientes = ref.watch(clientesProvider).valueOrNull ?? const <Cliente>[];
-    final vehiculos = ref.watch(vehiculosProvider).valueOrNull ?? const <Vehiculo>[];
-    final tallerInfo = ref.watch(tallerInfoProvider).valueOrNull;
+
+    if (clientesAsync.isLoading || vehiculosAsync.isLoading || (tallerInfoAsync.isLoading && tallerInfoAsync.valueOrNull == null)) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (clientesAsync.hasError) {
+      return Center(child: Text('Error al cargar clientes: ${clientesAsync.error}'));
+    }
+    if (vehiculosAsync.hasError) {
+      return Center(child: Text('Error al cargar vehículos: ${vehiculosAsync.error}'));
+    }
+    if (tallerInfoAsync.hasError && tallerInfoAsync.valueOrNull == null) {
+      return Center(child: Text('Error al cargar datos del taller: ${tallerInfoAsync.error}'));
+    }
+
+    final clientes = clientesAsync.valueOrNull ?? const <Cliente>[];
+    final vehiculos = vehiculosAsync.valueOrNull ?? const <Vehiculo>[];
+    final tallerInfo = tallerInfoAsync.valueOrNull;
 
     if (recepcion == null) {
       if (recepcionesAsync.isLoading) {

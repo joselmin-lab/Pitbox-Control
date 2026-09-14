@@ -141,6 +141,19 @@ void main() {
     notifier.removeFotografiaPendiente('foto-1');
     expect(container.read(recepcionFormProvider).fotografiasPendientes, isEmpty);
   });
+
+  test('recepcionFormProvider reconoce firmas remotas existentes', () {
+    final container = _buildContainer(_RecepcionRepositoryFake([]));
+    addTearDown(container.dispose);
+
+    container.read(recepcionFormProvider.notifier).initialize(
+          _sampleRecepcion(id: 'r1', numero: '001-2026'),
+        );
+
+    final draft = container.read(recepcionFormProvider);
+    expect(draft.tieneFirmaPrestador, isTrue);
+    expect(draft.tieneFirmaCliente, isTrue);
+  });
 }
 
 ProviderContainer _buildContainer(RecepcionRepository repository) {
