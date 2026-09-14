@@ -52,6 +52,22 @@ void main() {
     expect(repository.generatedYears, isEmpty);
   });
 
+  test('crear usa el año de fechaIngreso para solicitar el consecutivo', () async {
+    final repository = _RecepcionRepositoryFake([]);
+    final container = _buildContainer(repository);
+    addTearDown(container.dispose);
+
+    await container.read(recepcionesProvider.future);
+    await container.read(recepcionesProvider.notifier).crear(
+          _sampleRecepcion(
+            id: '',
+            numero: '',
+          ).copyWith(fechaIngreso: DateTime(2027, 3, 10)),
+        );
+
+    expect(repository.generatedYears, [2027]);
+  });
+
   test('cambiarEstado persiste actualización', () async {
     final original = _sampleRecepcion(id: 'r1', numero: '001-2026');
     final repository = _RecepcionRepositoryFake([original]);

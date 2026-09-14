@@ -202,11 +202,10 @@ class RecepcionDetailScreen extends ConsumerWidget {
                 runSpacing: AppSpacing.sm,
                 children: [
                   for (final item in recepcion.checklistSistemas)
-                    FilterChip(
+                    _StatusPill(
+                      label: item.etiqueta,
+                      icon: _iconFor(item.icono),
                       selected: item.marcado,
-                      onSelected: null,
-                      avatar: Icon(_iconFor(item.icono), size: 18),
-                      label: Text(item.etiqueta),
                     ),
                 ],
               ),
@@ -236,7 +235,11 @@ class RecepcionDetailScreen extends ConsumerWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Checkbox(value: item.marcado, onChanged: null),
+                              Icon(
+                                item.marcado ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                                color: item.marcado ? AppColors.primary : AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
                               Expanded(child: Text(item.item)),
                             ],
                           ),
@@ -552,6 +555,50 @@ class _SignaturePreview extends StatelessWidget {
               : const Text('Sin firma'),
         ),
       ],
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({
+    required this.label,
+    required this.icon,
+    required this.selected,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: selected ? AppColors.primary.withOpacity(0.12) : Colors.black.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: selected ? AppColors.primary : Theme.of(context).dividerColor,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            selected ? Icons.check_circle_rounded : icon,
+            size: 18,
+            color: selected ? AppColors.primary : AppColors.textSecondary,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: selected ? AppColors.primaryDark : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
