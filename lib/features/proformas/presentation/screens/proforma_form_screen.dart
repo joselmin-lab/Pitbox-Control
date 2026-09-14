@@ -734,7 +734,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
   }
 }
 
-class _CatalogAddField<T> extends StatelessWidget {
+class _CatalogAddField<T extends Object> extends StatelessWidget {
   const _CatalogAddField({
     required this.label,
     required this.controller,
