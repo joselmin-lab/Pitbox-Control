@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -70,7 +68,7 @@ class ProformaPdfExporter {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       _label('CLIENTE'),
-                      pw.Text('${cliente?.nombreCompleto ?? '—'}'),
+                      pw.Text(cliente?.nombreCompleto ?? '—'),
                       pw.SizedBox(height: 4),
                       pw.Text(
                         vehiculo == null
