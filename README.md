@@ -1,6 +1,6 @@
 # Pitbox Control
 
-Pitbox Control es una app multiplataforma para la gestión de talleres mecánicos. Esta versión incluye **Fase 1 + Fase 2**: base de interfaz modular y módulos funcionales de **Clientes**, **Vehículos**, **Servicios**, **Paquetes de servicios** y **Datos del taller** con relación **1:N** (clientes/vehículos) y **N:N** (paquetes/servicios).
+Pitbox Control es una app multiplataforma para la gestión de talleres mecánicos. Esta versión incluye **Fase 1 + Fase 2** y la primera fase operativa de **Trabajos**: base de interfaz modular y módulos funcionales de **Clientes**, **Vehículos**, **Servicios**, **Paquetes de servicios**, **Datos del taller**, **Proformas**, **Impuestos** y **Recepción de vehículos** con relación **1:N** (clientes/vehículos) y **N:N** (paquetes/servicios).
 
 ## Stack técnico
 
@@ -111,6 +111,7 @@ main.dart
 - Módulo Impuestos funcional: configuración de porcentajes IVA e IT.
 - Proformas con tipo Facturado/No facturado y descuento automático por IVA+IT.
 - Bloqueo de creación de proformas nuevas cuando faltan datos del taller.
+- Módulo Recepción de vehículos funcional: listado, formulario, detalle tipo documento, fotos, daños, inventario, firmas digitales y exportación PDF.
 - Relación 1:N Cliente → Vehículos en detalle de cliente.
 - Tema global claro con paleta rojo/negro, espaciados y estados interactivos.
 - Componentes reutilizables: botones, cards, badges y tabla.
@@ -137,12 +138,13 @@ main.dart
 - [x] Configuración de Impuestos (IVA e IT) conectada a Supabase.
 - [x] Proformas Facturado/No facturado con desglose de subtotal, descuento y total final.
 - [x] Validación de Datos del Taller antes de crear nuevas proformas.
+- [x] Módulo de Recepción de Vehículos con numeración anual, checklist, inventario, daños, fotos y firmas.
 - [x] Navegación completa para crear/editar/ver detalle de clientes y vehículos.
 - [x] KPIs de dashboard para totales reales desde repositorio de datos.
 
 ## Conexión a Supabase
 
-Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_servicio_items`, `taller_info`, `configuracion_impuestos`, `proformas`, `proforma_items` y `proforma_contadores` deben crearse antes de usar la app con datos reales.
+Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_servicio_items`, `taller_info`, `configuracion_impuestos`, `proformas`, `proforma_items`, `proforma_contadores`, `recepciones_vehiculo` y `recepciones_contadores` deben crearse antes de usar la app con datos reales.
 
 1. Entra a [supabase.com](https://supabase.com) y abre tu proyecto.
 2. Ve a **SQL Editor**.
@@ -153,12 +155,23 @@ Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_
 7. Luego copia/pega y ejecuta `supabase/schema_proformas.sql` para proformas e ítems.
 8. Luego copia/pega y ejecuta `supabase/schema_impuestos.sql` para la configuración de IVA/IT.
 9. Luego copia/pega y ejecuta `supabase/schema_proformas_facturado.sql` para extender proformas con facturado, subtotal, descuento y total histórico.
-10. En **Storage** crea manualmente el bucket público `taller-logos`:
+10. Luego copia/pega y ejecuta `supabase/schema_recepciones.sql` para Recepción de Vehículos y su numeración consecutiva independiente.
+11. En **Storage** crea manualmente el bucket público `taller-logos`:
    - Storage → **New bucket**
    - Nombre: `taller-logos`
    - Activar **Public bucket**
    - Guardar
-11. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
+12. En **Storage** crea manualmente el bucket público `recepciones-fotos`:
+   - Storage → **New bucket**
+   - Nombre: `recepciones-fotos`
+   - Activar **Public bucket**
+   - Guardar
+13. En **Storage** crea manualmente el bucket público `recepciones-firmas`:
+   - Storage → **New bucket**
+   - Nombre: `recepciones-firmas`
+   - Activar **Public bucket**
+   - Guardar
+14. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
 
 > El script SQL se ejecuta manualmente desde Supabase (no desde esta app).
 
@@ -177,6 +190,7 @@ La app inicializa Supabase en `main.dart` y los providers inyectan repositorios 
 - `SupabaseTallerRepository`
 - `SupabaseImpuestosRepository`
 - `SupabaseProformaRepository`
+- `SupabaseRecepcionRepository`
 
 ### Numeración de proformas por año
 
@@ -194,6 +208,22 @@ El script `supabase/schema_proformas.sql` crea la función SQL `generar_siguient
 - Para mantener consistencia histórica, `proformas` persiste `facturado`, `subtotal`, `descuento_no_facturado` y `total`.
 - Para crear una proforma nueva se exige tener Datos del Taller configurados con `nombre` y al menos `telefono` o `correo`.
 
+### Numeración de recepciones por año
+
+El script `supabase/schema_recepciones.sql` crea la función SQL `generar_siguiente_numero_recepcion(anio_actual integer)`.
+
+- Usa `upsert` atómico sobre `recepciones_contadores` para incrementar el consecutivo sin colisiones.
+- Devuelve el formato `XXX-YYYY` (ej. `001-2026`) y reinicia por cada año.
+- Es independiente de la numeración de proformas.
+
+### Recepción de vehículos
+
+- La recepción reutiliza el patrón Cliente → Vehículo ya usado en Proformas.
+- Permite registrar trabajo solicitado, observaciones libres, checklist de sistemas, inventario, combustible y daños preexistentes por vista.
+- Soporta carga de fotografías del vehículo en el bucket público `recepciones-fotos`.
+- Captura firma digital del prestador y del cliente y almacena las imágenes en el bucket público `recepciones-firmas`.
+- La vista de detalle y la exportación PDF muestran el logo configurado en Datos del Taller.
+
 ## Checklist de fase de datos
 
 - [x] Conexión real de Clientes a Supabase.
@@ -203,6 +233,7 @@ El script `supabase/schema_proformas.sql` crea la función SQL `generar_siguient
 - [x] Conexión real de Datos del taller a Supabase + Storage para logos.
 - [x] Conexión real de Configuración de Impuestos (IVA/IT) a Supabase.
 - [x] Conexión real de Proformas e Items a Supabase (incluye numeración anual atómica).
+- [x] Conexión real de Recepción de Vehículos a Supabase + Storage para fotos y firmas.
 - [x] Relación 1:N Cliente → Vehículos persistida con FK en base de datos.
 - [x] Relación N:N Paquetes ↔ Servicios persistida con tabla intermedia.
 - [x] Script SQL con RLS y políticas básicas para fase sin autenticación.
@@ -223,10 +254,10 @@ Reglas del importador:
 
 ## Siguiente fase recomendada
 
-Implementar **Trabajos** a partir de proformas aceptadas y robustecer el flujo comercial:
+Robustecer **Trabajos** a partir de las recepciones y conectar el flujo operativo completo:
 
-- Crear flujo Proforma aceptada → Orden de trabajo.
-- Vincular avance técnico, repuestos reales usados y mano de obra ejecutada.
+- Crear flujo Recepción → Orden de trabajo → Entrega del vehículo.
+- Vincular avance técnico, repuestos reales usados y mano de obra ejecutada con cada recepción.
 - Consolidar trazabilidad histórica por impuesto si se requiere auditoría separada IVA vs IT por proforma.
 - Conectar Trabajos con Contabilidad para registrar ingresos/costos reales.
 - Habilitar autenticación y endurecer políticas RLS por usuario/rol.

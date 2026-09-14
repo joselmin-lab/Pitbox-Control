@@ -16,6 +16,8 @@ import '../../features/vehiculos/data/repositories/supabase_vehiculo_repository.
 import '../../features/vehiculos/domain/repositories/vehiculo_repository.dart';
 import '../../features/proformas/data/repositories/supabase_proforma_repository.dart';
 import '../../features/proformas/domain/repositories/proforma_repository.dart';
+import '../../features/trabajos/recepciones/data/repositories/supabase_recepcion_repository.dart';
+import '../../features/trabajos/recepciones/domain/repositories/recepcion_repository.dart';
 
 final _supabaseClientProvider = Provider<SupabaseClient>((ref) {
   if (!SupabaseService.isInitialized) {
@@ -55,4 +57,8 @@ final impuestosRepositoryProvider = Provider<ImpuestosRepository>((ref) {
 
 final proformaRepositoryProvider = Provider<ProformaRepository>((ref) {
   return SupabaseProformaRepository(ref.watch(_supabaseClientProvider));
+});
+
+final recepcionRepositoryProvider = Provider<RecepcionRepository>((ref) {
+  return SupabaseRecepcionRepository(ref.watch(_supabaseClientProvider));
 });
