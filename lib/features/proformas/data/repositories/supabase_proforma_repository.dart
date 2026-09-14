@@ -80,8 +80,13 @@ class SupabaseProformaRepository implements ProformaRepository {
           .single();
 
       final created = _fromProformaRow(_row(inserted));
-      if (proforma.items.isNotEmpty) {
-        await _replaceItems(proformaId: created.id, items: proforma.items);
+      try {
+        if (proforma.items.isNotEmpty) {
+          await _replaceItems(proformaId: created.id, items: proforma.items);
+        }
+      } catch (_) {
+        await _client.from('proformas').delete().eq('id', created.id);
+        rethrow;
       }
 
       final withItems = await getById(created.id);

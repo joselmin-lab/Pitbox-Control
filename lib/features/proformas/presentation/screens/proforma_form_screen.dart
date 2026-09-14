@@ -61,7 +61,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
   void didUpdateWidget(covariant ProformaFormScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.proformaId != widget.proformaId) {
-      _initialized = false;
+      _resetLocalState();
     }
   }
 
@@ -686,6 +686,32 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     _nextItemKey++;
     return key;
   }
+
+  void _resetLocalState() {
+    _initialized = false;
+    _saving = false;
+    _fecha = DateTime.now();
+    _numeroProforma = '';
+    _selectedClienteId = null;
+    _selectedVehiculoId = null;
+    _servicioSeleccionado = null;
+    _paqueteSeleccionado = null;
+    _items = <ProformaItem>[];
+    _editingProforma = null;
+    _itemRowKeys = <String>[];
+    _nextItemKey = 0;
+    _clienteController.clear();
+    _condicionesController.clear();
+    _validezController.clear();
+    _tiempoEntregaController.clear();
+    _tiempoGarantiaController.clear();
+    _formaPagoController.clear();
+    _servicioController.clear();
+    _paqueteController.clear();
+    _repuestoDescripcionController.clear();
+    _repuestoCantidadController.text = '1';
+    _repuestoPrecioController.clear();
+  }
 }
 
 class _CatalogAddField<T> extends StatelessWidget {
@@ -709,10 +735,12 @@ class _CatalogAddField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: RawAutocomplete<T>(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Row(
+          children: [
+            Expanded(
+              child: RawAutocomplete<T>(
             displayStringForOption: optionLabel,
             textEditingController: controller,
             focusNode: focusNode,
@@ -731,40 +759,42 @@ class _CatalogAddField<T> extends StatelessWidget {
                 decoration: InputDecoration(labelText: label),
               );
             },
-            optionsViewBuilder: (context, onSelected, options) {
-              return Align(
-                alignment: Alignment.topLeft,
-                child: Material(
-                  elevation: 4,
-                  child: SizedBox(
-                    width: 450,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 220),
-                      child: ListView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: options.length,
-                        itemBuilder: (context, index) {
-                          final option = options.elementAt(index);
-                          return ListTile(
-                            title: Text(optionLabel(option)),
-                            onTap: () => onSelected(option),
-                          );
-                        },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4,
+                      child: SizedBox(
+                        width: constraints.maxWidth,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 220),
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: options.length,
+                            itemBuilder: (context, index) {
+                              final option = options.elementAt(index);
+                              return ListTile(
+                                title: Text(optionLabel(option)),
+                                onTap: () => onSelected(option),
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        IconButton(
-          tooltip: label,
-          onPressed: onAdd,
-          icon: const Icon(Icons.add_circle_outline_rounded),
-        ),
-      ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton(
+              tooltip: label,
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_circle_outline_rounded),
+            ),
+          ],
+        );
+      },
     );
   }
 }
