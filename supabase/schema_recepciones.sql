@@ -73,12 +73,12 @@ alter table recepciones_contadores enable row level security;
 drop policy if exists "Permitir lectura publica recepciones_vehiculo" on recepciones_vehiculo;
 drop policy if exists "Permitir insercion publica recepciones_vehiculo" on recepciones_vehiculo;
 drop policy if exists "Permitir actualizacion publica recepciones_vehiculo" on recepciones_vehiculo;
-drop policy if exists "Permitir eliminacion publica recepciones_vehiculo" on recepciones_vehiculo;
 
 create policy "Permitir lectura publica recepciones_vehiculo" on recepciones_vehiculo for select using (true);
 create policy "Permitir insercion publica recepciones_vehiculo" on recepciones_vehiculo for insert with check (true);
 create policy "Permitir actualizacion publica recepciones_vehiculo" on recepciones_vehiculo for update using (true);
-create policy "Permitir eliminacion publica recepciones_vehiculo" on recepciones_vehiculo for delete using (true);
+-- No se expone borrado público para recepciones.
+-- Las políticas siguen siendo sólo para desarrollo y deben endurecerse en producción.
 
 drop policy if exists "Permitir lectura publica recepciones_contadores" on recepciones_contadores;
 drop policy if exists "Permitir insercion publica recepciones_contadores" on recepciones_contadores;

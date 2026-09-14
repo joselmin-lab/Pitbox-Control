@@ -82,7 +82,9 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
     final clientes = clientesAsync.valueOrNull ?? const <Cliente>[];
     final vehiculos = vehiculosAsync.valueOrNull ?? const <Vehiculo>[];
     final providerDraft = ref.watch(recepcionFormProvider);
-    final seedKey = widget.recepcionId ?? 'nueva';
+    final seedKey = widget.recepcionId == null
+        ? 'nueva'
+        : '${widget.recepcionId}:${recepcion?.fechaCreacion.toIso8601String() ?? 'loading'}';
     final draft = _ensureInitialized(seedKey, recepcion, clientes, providerDraft);
 
     final selectedCliente = _findClienteById(clientes, draft.clienteId);
