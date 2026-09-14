@@ -50,6 +50,12 @@ class DamageDiagram extends StatelessWidget {
                   onPressed: onUndo,
                   icon: const Icon(Icons.undo_rounded),
                 ),
+              if (_interactive && onTapPunto != null)
+                IconButton(
+                  tooltip: 'Agregar punto centrado',
+                  onPressed: () => onTapPunto?.call(const Offset(0.5, 0.5)),
+                  icon: const Icon(Icons.add_location_alt_rounded),
+                ),
               if (_interactive && onClear != null)
                 IconButton(
                   tooltip: 'Limpiar vista',
@@ -125,13 +131,18 @@ class DamageDiagram extends StatelessWidget {
                 return content;
               }
 
-              return GestureDetector(
-                onTapDown: (details) {
-                  final dx = (details.localPosition.dx / width).clamp(0.0, 1.0);
-                  final dy = (details.localPosition.dy / height).clamp(0.0, 1.0);
-                  onTapPunto?.call(Offset(dx.toDouble(), dy.toDouble()));
-                },
-                child: content,
+              return Semantics(
+                label: 'Diagrama de daños $title',
+                value: puntos.isEmpty ? 'Sin puntos marcados' : '${puntos.length} puntos marcados',
+                hint: 'Toca el diagrama para registrar un daño o usa el botón agregar punto centrado.',
+                child: GestureDetector(
+                  onTapDown: (details) {
+                    final dx = (details.localPosition.dx / width).clamp(0.0, 1.0);
+                    final dy = (details.localPosition.dy / height).clamp(0.0, 1.0);
+                    onTapPunto?.call(Offset(dx.toDouble(), dy.toDouble()));
+                  },
+                  child: content,
+                ),
               );
             },
           ),
