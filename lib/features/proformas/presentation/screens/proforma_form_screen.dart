@@ -589,13 +589,12 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     setState(() => _saving = true);
     final current = widget.proformaId == null ? null : _editingProforma;
     if (widget.proformaId != null && current == null) {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aún se está cargando la proforma para editar.')),
+        );
+        setState(() => _saving = false);
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aún se está cargando la proforma para editar.')),
-      );
-      setState(() => _saving = false);
       return;
     }
 

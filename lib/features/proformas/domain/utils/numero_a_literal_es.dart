@@ -18,11 +18,25 @@ String _numeroALetras(int numero) {
     return 'menos ${_numeroALetras(numero.abs())}';
   }
 
+  final partes = <String>[];
+  if (numero >= 1000000000) {
+    final milesDeMillones = numero ~/ 1000000000;
+    final restoTrasMilesDeMillones = numero % 1000000000;
+    if (milesDeMillones == 1) {
+      partes.add('mil millones');
+    } else {
+      partes.add('${_apocoparParaMoneda(_numeroALetras(milesDeMillones))} mil millones');
+    }
+    if (restoTrasMilesDeMillones > 0) {
+      partes.add(_numeroALetras(restoTrasMilesDeMillones));
+    }
+    return partes.join(' ').replaceAll(RegExp(r'\\s+'), ' ').trim();
+  }
+
   final millones = numero ~/ 1000000;
   final miles = (numero % 1000000) ~/ 1000;
   final resto = numero % 1000;
 
-  final partes = <String>[];
   if (millones > 0) {
     if (millones == 1) {
       partes.add('un millón');
