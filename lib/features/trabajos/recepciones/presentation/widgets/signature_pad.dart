@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
@@ -117,7 +119,7 @@ class _SignaturePainter extends CustomPainter {
         continue;
       }
       if (stroke.length == 1) {
-        canvas.drawPoints(PointMode.points, stroke, paint);
+        canvas.drawPoints(ui.PointMode.points, stroke, paint);
         continue;
       }
       final path = Path()..moveTo(stroke.first.dx, stroke.first.dy);

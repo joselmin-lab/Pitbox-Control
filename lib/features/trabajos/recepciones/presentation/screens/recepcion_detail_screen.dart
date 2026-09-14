@@ -592,7 +592,7 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: selected ? AppColors.primary.withOpacity(0.12) : Colors.black.withOpacity(0.04),
+        color: selected ? AppColors.primary.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: selected ? AppColors.primary : Theme.of(context).dividerColor,
