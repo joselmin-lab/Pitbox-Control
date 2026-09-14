@@ -14,6 +14,8 @@ import '../../features/configuracion/taller/presentation/screens/taller_info_scr
 import '../../features/contabilidad/presentation/screens/contabilidad_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/proformas/presentation/screens/proformas_screen.dart';
+import '../../features/proformas/presentation/screens/proforma_form_screen.dart';
+import '../../features/proformas/presentation/screens/proforma_detail_screen.dart';
 import '../../features/trabajos/presentation/screens/trabajos_screen.dart';
 import '../../features/vehiculos/presentation/screens/vehiculo_detail_screen.dart';
 import '../../features/vehiculos/presentation/screens/vehiculo_form_screen.dart';
@@ -80,6 +82,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/proformas',
             name: 'proformas',
             builder: (context, state) => const ProformasScreen(),
+            routes: [
+              GoRoute(
+                path: 'nueva',
+                name: 'proformas-nueva',
+                builder: (context, state) => const ProformaFormScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                name: 'proformas-detalle',
+                builder: (context, state) => ProformaDetailScreen(proformaId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: ':id/editar',
+                name: 'proformas-editar',
+                builder: (context, state) => ProformaFormScreen(proformaId: state.pathParameters['id']!),
+              ),
+            ],
           ),
           GoRoute(
             path: '/trabajos',

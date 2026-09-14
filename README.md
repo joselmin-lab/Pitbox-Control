@@ -7,7 +7,7 @@ Pitbox Control es una app multiplataforma para la gestión de talleres mecánico
 - Flutter 3.x / Dart con null safety
 - `flutter_riverpod` para estado de UI desacoplado
 - `go_router` para navegación declarativa
-- `supabase_flutter` para backend real de Clientes, Vehículos, Servicios, Paquetes y Datos del taller
+- `supabase_flutter` para backend real de Clientes, Vehículos, Servicios, Paquetes, Datos del taller y Proformas
 - `csv`, `file_picker` y `file_saver` para importar/exportar Servicios en CSV
 - `flutter_lints` para lint estricto
 
@@ -107,6 +107,7 @@ main.dart
 - Módulo Servicios funcional: listado, búsqueda/filtro, alta, edición, eliminación e importación/exportación CSV.
 - Módulo Paquetes funcional: listado, detalle, alta, edición, eliminación y asociación dinámica de servicios.
 - Módulo Datos del taller funcional: edición de nombre, dirección, teléfono, correo y logo del taller.
+- Módulo Proformas funcional: listado, creación/edición, vista previa estilo documento y exportación PDF.
 - Relación 1:N Cliente → Vehículos en detalle de cliente.
 - Tema global claro con paleta rojo/negro, espaciados y estados interactivos.
 - Componentes reutilizables: botones, cards, badges y tabla.
@@ -129,12 +130,13 @@ main.dart
 - [x] Módulo de Servicios (CRUD + CSV de importación/exportación).
 - [x] Módulo de Paquetes de servicios (CRUD + selección de servicios + precio dinámico/manual).
 - [x] Módulo de Datos del taller (nombre, dirección, teléfono, correo y logo en Storage).
+- [x] Módulo de Proformas (numeración anual, ítems y exportación PDF).
 - [x] Navegación completa para crear/editar/ver detalle de clientes y vehículos.
 - [x] KPIs de dashboard para totales reales desde repositorio de datos.
 
 ## Conexión a Supabase
 
-Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_servicio_items` y `taller_info` deben crearse antes de usar la app con datos reales.
+Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_servicio_items`, `taller_info`, `proformas`, `proforma_items` y `proforma_contadores` deben crearse antes de usar la app con datos reales.
 
 1. Entra a [supabase.com](https://supabase.com) y abre tu proyecto.
 2. Ve a **SQL Editor**.
@@ -142,12 +144,13 @@ Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_
 4. Copia/pega y ejecuta `supabase/schema.sql` para clientes/vehículos.
 5. Luego copia/pega y ejecuta `supabase/schema_servicios.sql` para servicios/paquetes.
 6. Luego copia/pega y ejecuta `supabase/schema_taller.sql` para datos generales del taller.
-7. En **Storage** crea manualmente el bucket público `taller-logos`:
+7. Luego copia/pega y ejecuta `supabase/schema_proformas.sql` para proformas e ítems.
+8. En **Storage** crea manualmente el bucket público `taller-logos`:
    - Storage → **New bucket**
    - Nombre: `taller-logos`
    - Activar **Public bucket**
    - Guardar
-8. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
+9. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
 
 > El script SQL se ejecuta manualmente desde Supabase (no desde esta app).
 
@@ -164,6 +167,14 @@ La app inicializa Supabase en `main.dart` y los providers inyectan repositorios 
 - `SupabaseServicioRepository`
 - `SupabasePaqueteServicioRepository`
 - `SupabaseTallerRepository`
+- `SupabaseProformaRepository`
+
+### Numeración de proformas por año
+
+El script `supabase/schema_proformas.sql` crea la función SQL `generar_siguiente_numero_proforma(anio_actual integer)`.
+
+- Usa `upsert` atómico sobre `proforma_contadores` para incrementar el consecutivo sin colisiones.
+- Devuelve el formato `XXX-YYYY` (ej. `001-2026`) y reinicia por cada año.
 
 ## Checklist de fase de datos
 
@@ -172,6 +183,7 @@ La app inicializa Supabase en `main.dart` y los providers inyectan repositorios 
 - [x] Conexión real de Servicios a Supabase.
 - [x] Conexión real de Paquetes e Items de paquete a Supabase.
 - [x] Conexión real de Datos del taller a Supabase + Storage para logos.
+- [x] Conexión real de Proformas e Items a Supabase (incluye numeración anual atómica).
 - [x] Relación 1:N Cliente → Vehículos persistida con FK en base de datos.
 - [x] Relación N:N Paquetes ↔ Servicios persistida con tabla intermedia.
 - [x] Script SQL con RLS y políticas básicas para fase sin autenticación.
@@ -192,9 +204,9 @@ Reglas del importador:
 
 ## Siguiente fase recomendada
 
-Implementar **Proformas** usando Servicios/Paquetes como base de cotización y aprovechar los datos de taller en plantillas/impresión:
+Implementar **Trabajos** a partir de proformas aceptadas y continuar con trazabilidad operativa:
 
-- Crear módulo de Proformas con líneas por servicio/paquete y cálculo de totales/impuestos.
-- Incluir nombre/logo/datos del taller en encabezado de proformas y documentos exportables.
-- Definir flujo Proforma → Aprobación → Trabajo con estados y trazabilidad.
+- Crear flujo Proforma aceptada → Orden de trabajo.
+- Vincular avance técnico, repuestos reales usados y mano de obra ejecutada.
+- Conectar Trabajos con Contabilidad para registrar ingresos/costos reales.
 - Habilitar autenticación y endurecer políticas RLS por usuario/rol.

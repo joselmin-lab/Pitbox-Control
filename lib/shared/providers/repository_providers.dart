@@ -12,6 +12,8 @@ import '../../features/configuracion/taller/domain/repositories/taller_repositor
 import '../../features/clientes/domain/repositories/cliente_repository.dart';
 import '../../features/vehiculos/data/repositories/supabase_vehiculo_repository.dart';
 import '../../features/vehiculos/domain/repositories/vehiculo_repository.dart';
+import '../../features/proformas/data/repositories/supabase_proforma_repository.dart';
+import '../../features/proformas/domain/repositories/proforma_repository.dart';
 
 final _supabaseClientProvider = Provider<SupabaseClient>((ref) {
   if (!SupabaseService.isInitialized) {
@@ -43,4 +45,8 @@ final paqueteServicioRepositoryProvider = Provider<PaqueteServicioRepository>((r
 
 final tallerRepositoryProvider = Provider<TallerRepository>((ref) {
   return SupabaseTallerRepository(ref.watch(_supabaseClientProvider));
+});
+
+final proformaRepositoryProvider = Provider<ProformaRepository>((ref) {
+  return SupabaseProformaRepository(ref.watch(_supabaseClientProvider));
 });
