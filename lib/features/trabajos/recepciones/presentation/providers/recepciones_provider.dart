@@ -123,7 +123,7 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
     state = state.copyWith(
       fechaIngreso: value,
       fechaSalidaEstimada: fechaSalidaActual != null && fechaSalidaActual.isBefore(value) ? null : fechaSalidaActual,
-      clearFechaSalidaEstimada: fechaSalidaActual == null || (fechaSalidaActual?.isBefore(value) ?? false),
+      clearFechaSalidaEstimada: fechaSalidaActual == null || fechaSalidaActual.isBefore(value),
     );
   }
 
