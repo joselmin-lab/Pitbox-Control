@@ -18,19 +18,17 @@ final recepcionesProvider = AsyncNotifierProvider<RecepcionesNotifier, List<Rece
 
 final recepcionesFiltradasProvider = Provider<List<RecepcionVehiculo>>((ref) {
   final recepciones = ref.watch(recepcionesProvider).valueOrNull ?? const <RecepcionVehiculo>[];
-  final query = ref.watch(recepcionesSearchQueryProvider).trim().toLowerCase();
   final estado = ref.watch(recepcionesEstadoFilterProvider);
   final clienteId = ref.watch(recepcionesClienteFilterProvider);
   final dateRange = ref.watch(recepcionesDateRangeFilterProvider);
 
   return recepciones.where((recepcion) {
-    final matchesQuery = query.isEmpty || recepcion.numero.toLowerCase().contains(query);
     final matchesEstado = estado == null || recepcion.estado == estado;
     final matchesCliente = clienteId == null || clienteId.isEmpty || recepcion.clienteId == clienteId;
     final matchesDate = dateRange == null ||
         (!recepcion.fechaIngreso.isBefore(_startOfDay(dateRange.start)) &&
             !recepcion.fechaIngreso.isAfter(_endOfDay(dateRange.end)));
-    return matchesQuery && matchesEstado && matchesCliente && matchesDate;
+    return matchesEstado && matchesCliente && matchesDate;
   }).toList(growable: false);
 });
 
@@ -83,9 +81,6 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
 
   void initialize(RecepcionVehiculo? recepcion) {
     final nextState = recepcion == null ? RecepcionFormState.initial() : RecepcionFormState.fromRecepcion(recepcion);
-    if (state.signature == nextState.signature) {
-      return;
-    }
     state = nextState;
   }
 
@@ -274,20 +269,6 @@ class RecepcionFormState {
   final String? firmaClienteUrl;
   final RecepcionEstado estado;
   final DateTime fechaCreacion;
-
-  String get signature => [
-        recepcionId ?? 'nueva',
-        numero,
-        clienteId ?? '',
-        vehiculoId ?? '',
-        fechaIngreso.toIso8601String(),
-        fechaSalidaEstimada?.toIso8601String() ?? '',
-        kilometraje,
-        ingresoEnGrua ? '1' : '0',
-        trabajoARealizar,
-        observaciones,
-        estado.name,
-      ].join('|');
 
   bool get tieneFirmaPrestador =>
       firmaPrestadorTrazos.any((stroke) => stroke.isNotEmpty) || (firmaPrestadorUrl?.trim().isNotEmpty ?? false);

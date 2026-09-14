@@ -2,6 +2,8 @@
 -- No se ejecuta automáticamente desde esta app Flutter.
 -- IMPORTANTE: Las políticas definidas aquí son permisivas para fase sin autenticación.
 -- Antes de producción, reemplazarlas por políticas por usuario/rol con auth habilitada.
+-- Este script replica deliberadamente el esquema abierto de desarrollo usado por módulos
+-- anteriores del proyecto. No debe usarse sin endurecer RLS cuando exista autenticación.
 --
 -- Storage requerido (crear manualmente en Supabase Dashboard, igual que `taller-logos`):
 --   1. Bucket público `recepciones-fotos`
@@ -78,7 +80,7 @@ create policy "Permitir lectura publica recepciones_vehiculo" on recepciones_veh
 create policy "Permitir insercion publica recepciones_vehiculo" on recepciones_vehiculo for insert with check (true);
 create policy "Permitir actualizacion publica recepciones_vehiculo" on recepciones_vehiculo for update using (true);
 -- No se expone borrado público para recepciones.
--- Las políticas siguen siendo sólo para desarrollo y deben endurecerse en producción.
+-- Las políticas anteriores son sólo para desarrollo local/sin auth.
 
 drop policy if exists "Permitir lectura publica recepciones_contadores" on recepciones_contadores;
 drop policy if exists "Permitir insercion publica recepciones_contadores" on recepciones_contadores;

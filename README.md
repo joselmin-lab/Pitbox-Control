@@ -222,6 +222,7 @@ El script `supabase/schema_recepciones.sql` crea la función SQL `generar_siguie
 - Permite registrar trabajo solicitado, observaciones libres, checklist de sistemas, inventario, combustible y daños preexistentes por vista.
 - Soporta carga de fotografías del vehículo en el bucket público `recepciones-fotos`.
 - Captura firma digital del prestador y del cliente y almacena las imágenes en el bucket público `recepciones-firmas`.
+- El formulario exige ambas firmas para guardar la recepción.
 - La vista de detalle y la exportación PDF muestran el logo configurado en Datos del Taller.
 
 ## Checklist de fase de datos

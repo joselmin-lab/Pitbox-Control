@@ -216,9 +216,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
                               ? null
                               : (value) {
                                   final vehiculo = _findVehiculoById(vehiculos, value);
-                                  if (_kilometrajeController.text.trim().isEmpty && vehiculo?.kilometraje != null) {
-                                    _kilometrajeController.text = vehiculo!.kilometraje.toString();
-                                  }
+                                  _kilometrajeController.text = vehiculo?.kilometraje?.toString() ?? '';
                                   ref.read(recepcionFormProvider.notifier).setVehiculo(
                                         value,
                                         kilometrajeSugerido: vehiculo?.kilometraje?.toString(),
