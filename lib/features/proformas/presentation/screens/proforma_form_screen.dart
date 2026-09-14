@@ -143,9 +143,6 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
       }
       _syncClienteField(clientes);
       _initialized = true;
-      if (proforma == null && _numeroProforma.isEmpty) {
-        _generarNumero();
-      }
     }
 
     final vehiculosDelCliente = _selectedClienteId == null
@@ -169,7 +166,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('N° Proforma: ${_numeroProforma.isEmpty ? 'Generando...' : _numeroProforma}'),
+              Text('N° Proforma: ${_numeroProforma.isEmpty ? 'Se asignará al guardar' : _numeroProforma}'),
               const SizedBox(height: AppSpacing.sm),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -277,6 +274,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
+                key: ValueKey('${_selectedClienteId ?? ''}-${_selectedVehiculoId ?? ''}'),
                 initialValue: vehiculosDelCliente.any((item) => item.id == _selectedVehiculoId) ? _selectedVehiculoId : null,
                 decoration: const InputDecoration(labelText: 'Vehículo *'),
                 items: [
@@ -504,23 +502,6 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     );
   }
 
-  Future<void> _generarNumero() async {
-    try {
-      final numero = await ref.read(proformasProvider.notifier).generarNumero(_fecha);
-      if (!mounted) {
-        return;
-      }
-      setState(() => _numeroProforma = numero);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo generar el número de proforma.')),
-      );
-    }
-  }
-
   void _agregarRepuesto() {
     final descripcion = _repuestoDescripcionController.text.trim();
     final cantidad = double.tryParse(_repuestoCantidadController.text.replaceAll(',', '.').trim());
@@ -573,12 +554,6 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    if (_numeroProforma.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aún se está generando el número de proforma.')),
-      );
-      return;
-    }
     if (_items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes agregar al menos un ítem.')),
@@ -599,7 +574,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
 
     final proforma = Proforma(
       id: current?.id ?? '',
-      numero: _numeroProforma,
+      numero: current?.numero ?? _numeroProforma,
       clienteId: _selectedClienteId!,
       vehiculoId: _selectedVehiculoId!,
       fecha: _fecha,

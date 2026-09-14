@@ -23,5 +23,12 @@ void main() {
         'Dos 00/100 bolivianos',
       );
     });
+
+    test('aplica apocope monetario con uno y compuestos', () {
+      expect(montoEnLiteralBolivianos(1), 'Un 00/100 bolivianos');
+      expect(montoEnLiteralBolivianos(21), 'Veintiún 00/100 bolivianos');
+      expect(montoEnLiteralBolivianos(31), 'Treinta y un 00/100 bolivianos');
+      expect(montoEnLiteralBolivianos(121), 'Ciento veintiún 00/100 bolivianos');
+    });
   });
 }

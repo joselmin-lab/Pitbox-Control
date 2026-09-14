@@ -160,17 +160,11 @@ class SupabaseProformaRepository implements ProformaRepository {
   }
 
   Future<void> _replaceItems({required String proformaId, required List<ProformaItem> items}) async {
-    await _client.from('proforma_items').delete().eq('proforma_id', proformaId);
-    if (items.isEmpty) {
-      return;
-    }
-
     final payload = items
         .map(
           (item) => {
-            'proforma_id': proformaId,
             'tipo_item': _tipoToDb(item.tipoItem),
-            'referencia_id': item.referenciaId,
+            'referencia_id': item.referenciaId ?? '',
             'descripcion': item.descripcion,
             'cantidad': item.cantidad,
             'precio_unitario': item.precioUnitario,
@@ -179,7 +173,10 @@ class SupabaseProformaRepository implements ProformaRepository {
         )
         .toList(growable: false);
 
-    await _client.from('proforma_items').insert(payload);
+    await _client.rpc('reemplazar_items_proforma', params: {
+      'p_proforma_id': proformaId,
+      'p_items': payload,
+    });
   }
 
   Proforma _fromProformaRow(Map<String, dynamic> row) {

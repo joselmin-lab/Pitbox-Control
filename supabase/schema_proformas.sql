@@ -62,6 +62,44 @@ begin
 end;
 $$;
 
+create or replace function reemplazar_items_proforma(
+  p_proforma_id uuid,
+  p_items jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from proforma_items
+  where proforma_id = p_proforma_id;
+
+  if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
+    return;
+  end if;
+
+  insert into proforma_items (
+    proforma_id,
+    tipo_item,
+    referencia_id,
+    descripcion,
+    cantidad,
+    precio_unitario,
+    total
+  )
+  select
+    p_proforma_id,
+    coalesce(item->>'tipo_item', 'repuesto_insumo'),
+    nullif(item->>'referencia_id', '')::uuid,
+    coalesce(item->>'descripcion', ''),
+    coalesce((item->>'cantidad')::numeric, 1),
+    coalesce((item->>'precio_unitario')::numeric, 0),
+    coalesce((item->>'total')::numeric, 0)
+  from jsonb_array_elements(p_items) as item;
+end;
+$$;
+
 alter table proformas enable row level security;
 alter table proforma_items enable row level security;
 alter table proforma_contadores enable row level security;

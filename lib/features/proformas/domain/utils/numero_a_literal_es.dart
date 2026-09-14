@@ -2,7 +2,7 @@ String montoEnLiteralBolivianos(double valor) {
   final totalCentavos = (valor * 100).round();
   final entero = totalCentavos ~/ 100;
   final centavos = totalCentavos % 100;
-  final literal = _numeroALetras(entero);
+  final literal = _apocoparParaMoneda(_numeroALetras(entero));
   final centavosTexto = centavos.toString().padLeft(2, '0');
   return '${_capitalizar(literal)} $centavosTexto/100 bolivianos';
 }
@@ -141,4 +141,20 @@ String _convertirHasta999(int numero) {
 String _capitalizar(String texto) {
   if (texto.isEmpty) return texto;
   return texto[0].toUpperCase() + texto.substring(1);
+}
+
+String _apocoparParaMoneda(String literal) {
+  if (literal == 'uno') {
+    return 'un';
+  }
+  if (literal.endsWith('veintiuno')) {
+    return '${literal.substring(0, literal.length - 'veintiuno'.length)}veintiún';
+  }
+  if (literal.endsWith(' y uno')) {
+    return '${literal.substring(0, literal.length - ' y uno'.length)} y un';
+  }
+  if (literal.endsWith(' uno')) {
+    return '${literal.substring(0, literal.length - ' uno'.length)} un';
+  }
+  return literal;
 }
