@@ -159,29 +159,27 @@ class RecepcionPdfExporter {
                       pw.SizedBox(height: 6),
                       pw.Row(
                         children: [
-                        pw.Text('E'),
-                          pw.SizedBox(width: 8),
-                          pw.Expanded(
-                            child: pw.Container(
-                              height: 12,
-                              decoration: pw.BoxDecoration(
-                                border: pw.Border.all(color: PdfColors.grey500),
-                                borderRadius: pw.BorderRadius.circular(6),
-                              ),
-                              child: pw.Row(
-                                children: [
-                                  pw.Container(
-                                    width: (160 * recepcion.nivelCombustible.clamp(0.0, 1.0)).toDouble(),
-                                    decoration: pw.BoxDecoration(
-                                      color: PdfColors.red700,
-                                      borderRadius: pw.BorderRadius.circular(6),
-                                    ),
-                                  ),
-                                ],
+                          for (var index = 0; index < 4; index++) ...[
+                            pw.Expanded(
+                              child: pw.Container(
+                                height: 12,
+                                decoration: pw.BoxDecoration(
+                                  color: recepcion.nivelCombustible.clamp(0.0, 1.0) >= ((index + 1) / 4)
+                                      ? PdfColors.red700
+                                      : PdfColors.grey200,
+                                  border: pw.Border.all(color: PdfColors.grey500),
+                                ),
                               ),
                             ),
-                          ),
-                          pw.SizedBox(width: 8),
+                            if (index < 3) pw.SizedBox(width: 4),
+                          ],
+                        ],
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Row(
+                        children: [
+                          pw.Text('E'),
+                          pw.Spacer(),
                           pw.Text('F'),
                         ],
                       ),

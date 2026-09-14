@@ -42,6 +42,18 @@ void main() {
       fotografias: const ['not-a-valid-image-url'],
       firmaPrestadorUrl: 'not-a-valid-signature-url',
       firmaClienteUrl: 'not-a-valid-signature-url-2',
+      danosPreexistentes: const [
+        DanoVehiculoMarcado(
+          vista: RecepcionVistaVehiculo.frente,
+          x: 0.2,
+          y: 0.3,
+        ),
+        DanoVehiculoMarcado(
+          vista: RecepcionVistaVehiculo.izquierdo,
+          x: 0.7,
+          y: 0.4,
+        ),
+      ],
       fechaCreacion: DateTime(2026, 1, 5),
     );
 

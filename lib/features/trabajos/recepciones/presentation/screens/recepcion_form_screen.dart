@@ -571,7 +571,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
                               OutlinedButton.icon(
                                 onPressed: _saving
                                     ? null
-                                    : () => ref.read(recepcionFormProvider.notifier).setFirmaPrestador(const []),
+                                    : () => ref.read(recepcionFormProvider.notifier).clearFirmaPrestador(),
                                 icon: const Icon(Icons.restart_alt_rounded),
                                 label: const Text('Limpiar firma'),
                               ),
@@ -603,7 +603,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
                               OutlinedButton.icon(
                                 onPressed: _saving
                                     ? null
-                                    : () => ref.read(recepcionFormProvider.notifier).setFirmaCliente(const []),
+                                    : () => ref.read(recepcionFormProvider.notifier).clearFirmaCliente(),
                                 icon: const Icon(Icons.restart_alt_rounded),
                                 label: const Text('Limpiar firma'),
                               ),

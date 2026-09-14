@@ -113,8 +113,12 @@ class RecepcionDetailScreen extends ConsumerWidget {
                 width: 92,
                 height: 92,
                 child: ((tallerInfo?.logoUrl ?? '').trim().isNotEmpty)
-                    ? Image.network(tallerInfo?.logoUrl ?? '', fit: BoxFit.contain)
-                    : const Icon(Icons.precision_manufacturing_rounded, size: 56),
+                  ? Image.network(
+                      tallerInfo?.logoUrl ?? '',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.precision_manufacturing_rounded, size: 56),
+                    )
+                  : const Icon(Icons.precision_manufacturing_rounded, size: 56),
               ),
             ),
             const SizedBox(height: AppSpacing.xs),

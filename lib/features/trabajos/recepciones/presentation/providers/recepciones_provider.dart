@@ -169,12 +169,18 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
   }
 
   void undoDanoVista(RecepcionVistaVehiculo vista) {
-    final current = state.danosPreexistentes.where((item) => item.vista == vista).toList(growable: false);
-    if (current.isEmpty) {
+    final updated = state.danosPreexistentes.toList(growable: true);
+    var removed = false;
+    for (var index = updated.length - 1; index >= 0; index--) {
+      if (updated[index].vista == vista) {
+        updated.removeAt(index);
+        removed = true;
+        break;
+      }
+    }
+    if (!removed) {
       return;
     }
-    final updated = state.danosPreexistentes.toList(growable: true);
-    updated.removeLastWhere((item) => item.vista == vista);
     state = state.copyWith(danosPreexistentes: updated);
   }
 
@@ -202,6 +208,20 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
 
   void setFirmaCliente(List<List<Offset>> trazos) {
     state = state.copyWith(firmaClienteTrazos: _copyTrazos(trazos));
+  }
+
+  void clearFirmaPrestador() {
+    state = state.copyWith(
+      firmaPrestadorTrazos: const <List<Offset>>[],
+      firmaPrestadorUrl: '',
+    );
+  }
+
+  void clearFirmaCliente() {
+    state = state.copyWith(
+      firmaClienteTrazos: const <List<Offset>>[],
+      firmaClienteUrl: '',
+    );
   }
 
   static List<List<Offset>> _copyTrazos(List<List<Offset>> source) {
@@ -418,13 +438,3 @@ DateTime _startOfDay(DateTime date) => DateTime(date.year, date.month, date.day)
 
 DateTime _endOfDay(DateTime date) => DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
 
-extension<T> on List<T> {
-  void removeLastWhere(bool Function(T item) test) {
-    for (var index = length - 1; index >= 0; index--) {
-      if (test(this[index])) {
-        removeAt(index);
-        return;
-      }
-    }
-  }
-}
