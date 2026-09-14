@@ -8,10 +8,15 @@ import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_table.dart';
 import '../../../clientes/domain/models/cliente.dart';
 import '../../../clientes/presentation/providers/clientes_provider.dart';
+import '../../../configuracion/impuestos/domain/models/configuracion_impuestos.dart';
+import '../../../configuracion/impuestos/domain/utils/impuestos_validator.dart';
+import '../../../configuracion/impuestos/presentation/providers/impuestos_provider.dart';
 import '../../../configuracion/servicios/domain/models/paquete_servicio.dart';
 import '../../../configuracion/servicios/domain/models/servicio.dart';
 import '../../../configuracion/servicios/presentation/providers/paquetes_servicios_provider.dart';
 import '../../../configuracion/servicios/presentation/providers/servicios_provider.dart';
+import '../../../configuracion/taller/domain/utils/taller_info_validator.dart';
+import '../../../configuracion/taller/presentation/providers/taller_info_provider.dart';
 import '../../../vehiculos/domain/models/vehiculo.dart';
 import '../../../vehiculos/presentation/providers/vehiculos_provider.dart';
 import '../../domain/models/proforma.dart';
@@ -46,6 +51,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
 
   bool _initialized = false;
   bool _saving = false;
+  bool _facturado = true;
   DateTime _fecha = DateTime.now();
   String _numeroProforma = '';
   String? _selectedClienteId;
@@ -89,6 +95,8 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     final proformasAsync = ref.watch(proformasProvider);
     final proformaId = widget.proformaId;
     final proforma = proformaId == null ? null : ref.watch(proformaByIdProvider(proformaId));
+    final tallerInfoAsync = ref.watch(tallerInfoProvider);
+    final impuestosAsync = ref.watch(impuestosProvider);
 
     final clientesAsync = ref.watch(clientesProvider);
     final clientes = clientesAsync.valueOrNull ?? const <Cliente>[];
@@ -118,6 +126,14 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     if (paquetesAsync.hasError) {
       return Center(child: Text('Error al cargar paquetes: ${paquetesAsync.error}'));
     }
+    if (impuestosAsync.isLoading && impuestosAsync.valueOrNull == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (impuestosAsync.hasError && impuestosAsync.valueOrNull == null) {
+      return Center(child: Text('Error al cargar impuestos: ${impuestosAsync.error}'));
+    }
+
+    final impuestos = impuestosAsync.valueOrNull ?? ConfiguracionImpuestos.porDefecto();
 
     if (proformaId != null && proforma == null) {
       if (proformasAsync.isLoading) {
@@ -129,6 +145,19 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
       return const Center(child: Text('Proforma no encontrada.'));
     }
 
+    if (proformaId == null) {
+      final tallerInfo = tallerInfoAsync.valueOrNull;
+      if (tallerInfoAsync.hasError) {
+        return Center(child: Text('Error al validar datos del taller: ${tallerInfoAsync.error}'));
+      }
+      if (tallerInfoAsync.isLoading && tallerInfo == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (!tallerInfoPermiteCrearProformas(tallerInfo)) {
+        return const _TallerInfoRequiredState();
+      }
+    }
+
     if (!_initialized) {
       if (proforma != null) {
         _editingProforma = proforma;
@@ -136,6 +165,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
         _numeroProforma = proforma.numero;
         _selectedClienteId = proforma.clienteId;
         _selectedVehiculoId = proforma.vehiculoId;
+        _facturado = proforma.facturado;
         _condicionesController.text = proforma.condicionesPago ?? '';
         _validezController.text = proforma.validez ?? '';
         _tiempoEntregaController.text = proforma.tiempoEntrega ?? '';
@@ -146,6 +176,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
       } else {
         _editingProforma = null;
         _fecha = DateTime.now();
+        _facturado = true;
         _numeroProforma = '';
         _itemRowKeys = <String>[];
       }
@@ -164,7 +195,10 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
       _setClienteFieldText(selectedCliente.nombreCompleto);
     }
 
-    final total = _items.fold<double>(0, (sum, item) => sum + item.total);
+    final subtotal = _items.fold<double>(0, (sum, item) => sum + item.total);
+    final porcentajeDescuento = impuestos.porcentajeIva + impuestos.porcentajeIt;
+    final descuentoNoFacturado = _facturado ? 0.0 : (subtotal * porcentajeDescuento / 100);
+    final totalFinal = subtotal - descuentoNoFacturado;
 
     return SingleChildScrollView(
       child: AppSectionCard(
@@ -200,6 +234,21 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                         },
                   icon: const Icon(Icons.edit_calendar_rounded),
                 ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment<bool>(value: true, label: Text('Facturado')),
+                  ButtonSegment<bool>(value: false, label: Text('No facturado')),
+                ],
+                selected: {_facturado},
+                onSelectionChanged: _saving
+                    ? null
+                    : (selection) {
+                        setState(() {
+                          _facturado = selection.first;
+                        });
+                      },
               ),
               const SizedBox(height: AppSpacing.md),
               LayoutBuilder(
@@ -479,9 +528,25 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
               const SizedBox(height: AppSpacing.sm),
               Align(
                 alignment: Alignment.centerRight,
-                child: Text(
-                  'TOTAL: ${_formatBs(total)}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Subtotal: ${_formatBs(subtotal)}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    if (!_facturado)
+                      Text(
+                        'Descuento por no facturar (IVA ${impuestos.porcentajeIva.toStringAsFixed(2)}% + IT ${impuestos.porcentajeIt.toStringAsFixed(2)}%): -${_formatBs(descuentoNoFacturado)}',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    Text(
+                      'TOTAL FINAL: ${_formatBs(totalFinal)}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -591,9 +656,37 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    if (widget.proformaId == null) {
+      final tallerInfoAsync = ref.read(tallerInfoProvider);
+      if (tallerInfoAsync.isLoading && tallerInfoAsync.valueOrNull == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cargando datos del taller... intenta nuevamente.')),
+        );
+        return;
+      }
+      if (!tallerInfoPermiteCrearProformas(tallerInfoAsync.valueOrNull)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Debes completar los datos de tu taller antes de crear proformas.')),
+        );
+        return;
+      }
+    }
     if (_items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes agregar al menos un ítem.')),
+      );
+      return;
+    }
+    final impuestosAsync = ref.read(impuestosProvider);
+    if (impuestosAsync.isLoading && impuestosAsync.valueOrNull == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cargando configuración de impuestos... intenta nuevamente.')),
+      );
+      return;
+    }
+    if (impuestosAsync.hasError && impuestosAsync.valueOrNull == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo cargar la configuración de impuestos.')),
       );
       return;
     }
@@ -607,6 +700,18 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     }
 
     setState(() => _saving = true);
+    final impuestos = impuestosAsync.valueOrNull ?? ConfiguracionImpuestos.porDefecto();
+    final errorSumaImpuestos = validarSumaImpuestos(
+      porcentajeIva: impuestos.porcentajeIva,
+      porcentajeIt: impuestos.porcentajeIt,
+    );
+    final subtotal = _items.fold<double>(0, (sum, item) => sum + item.total);
+    final descuento = _facturado ? 0.0 : subtotal * ((impuestos.porcentajeIva + impuestos.porcentajeIt) / 100);
+    if (!_facturado && errorSumaImpuestos != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorSumaImpuestos)));
+      return;
+    }
+    final totalFinal = subtotal - descuento;
     final current = widget.proformaId == null ? null : _editingProforma;
     if (widget.proformaId != null && current == null) {
       if (mounted) {
@@ -631,7 +736,10 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
       tiempoGarantia: _optional(_tiempoGarantiaController.text),
       formaPago: _optional(_formaPagoController.text),
       estado: emitir ? ProformaEstado.emitida : (current?.estado ?? ProformaEstado.borrador),
-      total: _items.fold<double>(0, (sum, item) => sum + item.total),
+      facturado: _facturado,
+      subtotal: subtotal,
+      descuentoNoFacturado: descuento,
+      total: totalFinal,
       fechaCreacion: current?.fechaCreacion ?? DateTime.now(),
     );
 
@@ -710,6 +818,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
   void _resetLocalState() {
     _initialized = false;
     _saving = false;
+    _facturado = true;
     _fecha = DateTime.now();
     _numeroProforma = '';
     _selectedClienteId = null;
@@ -731,6 +840,32 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     _repuestoDescripcionController.clear();
     _repuestoCantidadController.text = '1';
     _repuestoPrecioController.clear();
+  }
+}
+
+class _TallerInfoRequiredState extends StatelessWidget {
+  const _TallerInfoRequiredState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: AppSectionCard(
+        title: 'Configuración requerida',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Debes completar los datos de tu taller antes de crear proformas.'),
+            const SizedBox(height: AppSpacing.md),
+            AppPrimaryButton(
+              label: 'Ir a Datos del Taller',
+              icon: Icons.storefront_rounded,
+              onPressed: () => context.go('/configuracion/taller'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -763,25 +898,25 @@ class _CatalogAddField<T extends Object> extends StatelessWidget {
           children: [
             Expanded(
               child: RawAutocomplete<T>(
-            displayStringForOption: optionLabel,
-            textEditingController: controller,
-            focusNode: focusNode,
-            optionsBuilder: (textEditingValue) {
-              final query = textEditingValue.text.trim().toLowerCase();
-              if (query.isEmpty) {
-                return options;
-              }
-              return options.where((option) => optionLabel(option).toLowerCase().contains(query));
-            },
-            onSelected: onSelected,
-            fieldViewBuilder: (context, textEditingController, focusNode, _) {
-              return TextField(
-                controller: textEditingController,
+                displayStringForOption: optionLabel,
+                textEditingController: controller,
                 focusNode: focusNode,
-                decoration: InputDecoration(labelText: label),
-                onChanged: onTextChanged,
-              );
-            },
+                optionsBuilder: (textEditingValue) {
+                  final query = textEditingValue.text.trim().toLowerCase();
+                  if (query.isEmpty) {
+                    return options;
+                  }
+                  return options.where((option) => optionLabel(option).toLowerCase().contains(query));
+                },
+                onSelected: onSelected,
+                fieldViewBuilder: (context, textEditingController, focusNode, _) {
+                  return TextField(
+                    controller: textEditingController,
+                    focusNode: focusNode,
+                    decoration: InputDecoration(labelText: label),
+                    onChanged: onTextChanged,
+                  );
+                },
                 optionsViewBuilder: (context, onSelected, options) {
                   return Align(
                     alignment: Alignment.topLeft,

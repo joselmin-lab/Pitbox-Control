@@ -5,7 +5,9 @@ import '../../core/services/supabase_service.dart';
 import '../../features/clientes/data/repositories/supabase_cliente_repository.dart';
 import '../../features/configuracion/servicios/data/repositories/supabase_paquete_servicio_repository.dart';
 import '../../features/configuracion/servicios/data/repositories/supabase_servicio_repository.dart';
+import '../../features/configuracion/impuestos/data/repositories/supabase_impuestos_repository.dart';
 import '../../features/configuracion/taller/data/repositories/supabase_taller_repository.dart';
+import '../../features/configuracion/impuestos/domain/repositories/impuestos_repository.dart';
 import '../../features/configuracion/servicios/domain/repositories/paquete_servicio_repository.dart';
 import '../../features/configuracion/servicios/domain/repositories/servicio_repository.dart';
 import '../../features/configuracion/taller/domain/repositories/taller_repository.dart';
@@ -45,6 +47,10 @@ final paqueteServicioRepositoryProvider = Provider<PaqueteServicioRepository>((r
 
 final tallerRepositoryProvider = Provider<TallerRepository>((ref) {
   return SupabaseTallerRepository(ref.watch(_supabaseClientProvider));
+});
+
+final impuestosRepositoryProvider = Provider<ImpuestosRepository>((ref) {
+  return SupabaseImpuestosRepository(ref.watch(_supabaseClientProvider));
 });
 
 final proformaRepositoryProvider = Provider<ProformaRepository>((ref) {

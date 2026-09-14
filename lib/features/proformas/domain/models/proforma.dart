@@ -68,6 +68,9 @@ class Proforma {
     this.tiempoGarantia,
     this.formaPago,
     this.estado = ProformaEstado.borrador,
+    this.facturado = true,
+    this.subtotal,
+    this.descuentoNoFacturado,
     this.total,
     required this.fechaCreacion,
   });
@@ -84,6 +87,9 @@ class Proforma {
   final String? tiempoGarantia;
   final String? formaPago;
   final ProformaEstado estado;
+  final bool facturado;
+  final double? subtotal;
+  final double? descuentoNoFacturado;
   final double? total;
   final DateTime fechaCreacion;
 
@@ -91,7 +97,11 @@ class Proforma {
     return items.fold<double>(0, (acc, item) => acc + item.total);
   }
 
-  double get totalFinal => total ?? totalCalculado;
+  double get subtotalFinal => subtotal ?? totalCalculado;
+
+  double get descuentoNoFacturadoFinal => descuentoNoFacturado ?? 0;
+
+  double get totalFinal => total ?? (subtotalFinal - descuentoNoFacturadoFinal);
 
   Proforma copyWith({
     String? id,
@@ -111,6 +121,11 @@ class Proforma {
     String? formaPago,
     bool clearFormaPago = false,
     ProformaEstado? estado,
+    bool? facturado,
+    double? subtotal,
+    bool clearSubtotal = false,
+    double? descuentoNoFacturado,
+    bool clearDescuentoNoFacturado = false,
     double? total,
     bool clearTotal = false,
     DateTime? fechaCreacion,
@@ -128,6 +143,9 @@ class Proforma {
       tiempoGarantia: clearTiempoGarantia ? null : (tiempoGarantia ?? this.tiempoGarantia),
       formaPago: clearFormaPago ? null : (formaPago ?? this.formaPago),
       estado: estado ?? this.estado,
+      facturado: facturado ?? this.facturado,
+      subtotal: clearSubtotal ? null : (subtotal ?? this.subtotal),
+      descuentoNoFacturado: clearDescuentoNoFacturado ? null : (descuentoNoFacturado ?? this.descuentoNoFacturado),
       total: clearTotal ? null : (total ?? this.total),
       fechaCreacion: fechaCreacion ?? this.fechaCreacion,
     );

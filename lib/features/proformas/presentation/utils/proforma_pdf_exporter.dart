@@ -17,12 +17,16 @@ class ProformaPdfExporter {
     required Cliente? cliente,
     required Vehiculo? vehiculo,
     required TallerInfo? taller,
+    double porcentajeIva = 13,
+    double porcentajeIt = 3,
   }) async {
     final bytes = await generarBytes(
       proforma: proforma,
       cliente: cliente,
       vehiculo: vehiculo,
       taller: taller,
+      porcentajeIva: porcentajeIva,
+      porcentajeIt: porcentajeIt,
     );
     await Printing.layoutPdf(onLayout: (_) async => bytes);
   }
@@ -32,6 +36,8 @@ class ProformaPdfExporter {
     required Cliente? cliente,
     required Vehiculo? vehiculo,
     required TallerInfo? taller,
+    double porcentajeIva = 13,
+    double porcentajeIt = 3,
   }) async {
     final pdf = pw.Document();
     final logo = await _loadLogo(taller?.logoUrl);
@@ -84,6 +90,18 @@ class ProformaPdfExporter {
                   children: [
                     _label('N° PROFORMA'),
                     pw.Text(proforma.numero),
+                    pw.SizedBox(height: 4),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: pw.BoxDecoration(
+                        color: proforma.facturado ? PdfColors.green600 : PdfColors.orange600,
+                        borderRadius: pw.BorderRadius.circular(16),
+                      ),
+                      child: pw.Text(
+                        proforma.facturado ? 'Facturado' : 'No facturado',
+                        style: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 9),
+                      ),
+                    ),
                     pw.SizedBox(height: 6),
                     _label('FECHA'),
                     pw.Text(_formatDate(proforma.fecha)),
@@ -123,6 +141,17 @@ class ProformaPdfExporter {
               ],
             ),
             pw.SizedBox(height: 10),
+            pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.Text('Subtotal: ${_formatBs(proforma.subtotalFinal)}'),
+            ),
+            if (!proforma.facturado)
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  'Descuento por no facturar (IVA ${porcentajeIva.toStringAsFixed(2)}% + IT ${porcentajeIt.toStringAsFixed(2)}%): -${_formatBs(proforma.descuentoNoFacturadoFinal)}',
+                ),
+              ),
             pw.Align(
               alignment: pw.Alignment.centerRight,
               child: pw.Text(
@@ -187,7 +216,7 @@ class ProformaPdfExporter {
         text: pw.TextSpan(
           children: [
             pw.TextSpan(text: '$label ', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
-            pw.TextSpan(text: content?.trim().isNotEmpty == true ? content!.trim() : '—'),
+            pw.TextSpan(text: (content == null || content.trim().isEmpty) ? '—' : content.trim()),
           ],
         ),
       ),
