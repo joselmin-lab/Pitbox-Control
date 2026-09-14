@@ -53,6 +53,9 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
   Servicio? _servicioSeleccionado;
   PaqueteServicio? _paqueteSeleccionado;
   List<ProformaItem> _items = <ProformaItem>[];
+  Proforma? _editingProforma;
+  List<String> _itemRowKeys = <String>[];
+  int _nextItemKey = 0;
 
   @override
   void didUpdateWidget(covariant ProformaFormScreen oldWidget) {
@@ -128,6 +131,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
 
     if (!_initialized) {
       if (proforma != null) {
+        _editingProforma = proforma;
         _fecha = proforma.fecha;
         _numeroProforma = proforma.numero;
         _selectedClienteId = proforma.clienteId;
@@ -138,8 +142,12 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
         _tiempoGarantiaController.text = proforma.tiempoGarantia ?? '';
         _formaPagoController.text = proforma.formaPago ?? '';
         _items = proforma.items.toList(growable: true);
+        _itemRowKeys = _items.map((item) => _buildRowKey(baseId: item.id)).toList(growable: true);
       } else {
+        _editingProforma = null;
         _fecha = DateTime.now();
+        _numeroProforma = '';
+        _itemRowKeys = <String>[];
       }
       _syncClienteField(clientes);
       _initialized = true;
@@ -322,6 +330,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                         precioUnitario: servicio.precio,
                       ),
                     );
+                    _itemRowKeys.add(_buildRowKey());
                     _servicioSeleccionado = null;
                     _servicioController.clear();
                   });
@@ -351,6 +360,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                         precioUnitario: paquete.precioTotalCalculado,
                       ),
                     );
+                    _itemRowKeys.add(_buildRowKey());
                     _paqueteSeleccionado = null;
                     _paqueteController.clear();
                   });
@@ -406,11 +416,13 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                   rows: [
                     for (var i = 0; i < _items.length; i++)
                       DataRow(
+                        key: ValueKey(_itemRowKeys[i]),
                         cells: [
                           DataCell(
                             SizedBox(
                               width: 70,
                               child: TextFormField(
+                                key: ValueKey('${_itemRowKeys[i]}-cantidad'),
                                 initialValue: _items[i].cantidad.toStringAsFixed(2),
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 onChanged: (value) => _updateCantidad(i, value),
@@ -422,6 +434,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                             SizedBox(
                               width: 110,
                               child: TextFormField(
+                                key: ValueKey('${_itemRowKeys[i]}-precio'),
                                 initialValue: _items[i].precioUnitario.toStringAsFixed(2),
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 onChanged: (value) => _updatePrecio(i, value),
@@ -432,7 +445,10 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
                           DataCell(
                             IconButton(
                               tooltip: 'Eliminar ítem',
-                              onPressed: () => setState(() => _items.removeAt(i)),
+                              onPressed: () => setState(() {
+                                _items.removeAt(i);
+                                _itemRowKeys.removeAt(i);
+                              }),
                               icon: const Icon(Icons.delete_outline_rounded),
                             ),
                           ),
@@ -524,6 +540,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
           precioUnitario: precio,
         ),
       );
+      _itemRowKeys.add(_buildRowKey());
       _repuestoDescripcionController.clear();
       _repuestoCantidadController.text = '1';
       _repuestoPrecioController.clear();
@@ -570,7 +587,17 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
     }
 
     setState(() => _saving = true);
-    final current = widget.proformaId == null ? null : ref.read(proformaByIdProvider(widget.proformaId!));
+    final current = widget.proformaId == null ? null : _editingProforma;
+    if (widget.proformaId != null && current == null) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aún se está cargando la proforma para editar.')),
+      );
+      setState(() => _saving = false);
+      return;
+    }
 
     final proforma = Proforma(
       id: current?.id ?? '',
@@ -595,6 +622,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
       if (!mounted) {
         return;
       }
+      _editingProforma = saved;
       context.go('/proformas/${saved.id}');
     } catch (_) {
       if (!mounted) {
@@ -649,6 +677,15 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
   String? _optional(String value) {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  String _buildRowKey({String? baseId}) {
+    if (baseId != null && baseId.trim().isNotEmpty) {
+      return 'db_${baseId.trim()}';
+    }
+    final key = 'tmp_${_nextItemKey.toString()}';
+    _nextItemKey++;
+    return key;
   }
 }
 

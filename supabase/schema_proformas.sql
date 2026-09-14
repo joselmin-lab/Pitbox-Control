@@ -100,6 +100,12 @@ begin
 end;
 $$;
 
+revoke all on function generar_siguiente_numero_proforma(integer) from public;
+grant execute on function generar_siguiente_numero_proforma(integer) to anon, authenticated, service_role;
+
+revoke all on function reemplazar_items_proforma(uuid, jsonb) from public;
+grant execute on function reemplazar_items_proforma(uuid, jsonb) to anon, authenticated, service_role;
+
 alter table proformas enable row level security;
 alter table proforma_items enable row level security;
 alter table proforma_contadores enable row level security;

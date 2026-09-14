@@ -1,8 +1,11 @@
 String montoEnLiteralBolivianos(double valor) {
   final totalCentavos = (valor * 100).round();
-  final entero = totalCentavos ~/ 100;
-  final centavos = totalCentavos % 100;
-  final literal = _apocoparParaMoneda(_numeroALetras(entero));
+  final esNegativo = totalCentavos < 0;
+  final centavosAbsolutos = totalCentavos.abs();
+  final entero = centavosAbsolutos ~/ 100;
+  final centavos = centavosAbsolutos % 100;
+  final literalBase = _apocoparParaMoneda(_numeroALetras(entero));
+  final literal = esNegativo ? 'menos $literalBase' : literalBase;
   final centavosTexto = centavos.toString().padLeft(2, '0');
   return '${_capitalizar(literal)} $centavosTexto/100 bolivianos';
 }
@@ -24,7 +27,7 @@ String _numeroALetras(int numero) {
     if (millones == 1) {
       partes.add('un millón');
     } else {
-      partes.add('${_convertirHasta999(millones)} millones');
+      partes.add('${_apocoparParaMoneda(_convertirHasta999(millones))} millones');
     }
   }
 
@@ -32,7 +35,7 @@ String _numeroALetras(int numero) {
     if (miles == 1) {
       partes.add('mil');
     } else {
-      partes.add('${_convertirHasta999(miles)} mil');
+      partes.add('${_apocoparParaMoneda(_convertirHasta999(miles))} mil');
     }
   }
 

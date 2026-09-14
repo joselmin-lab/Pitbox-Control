@@ -30,5 +30,14 @@ void main() {
       expect(montoEnLiteralBolivianos(31), 'Treinta y un 00/100 bolivianos');
       expect(montoEnLiteralBolivianos(121), 'Ciento veintiún 00/100 bolivianos');
     });
+
+    test('convierte millones', () {
+      expect(montoEnLiteralBolivianos(1000000), 'Un millón 00/100 bolivianos');
+      expect(montoEnLiteralBolivianos(21000000), 'Veintiún millones 00/100 bolivianos');
+    });
+
+    test('convierte negativos', () {
+      expect(montoEnLiteralBolivianos(-35.8), 'Menos treinta y cinco 80/100 bolivianos');
+    });
   });
 }
