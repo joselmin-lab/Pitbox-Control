@@ -42,6 +42,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
 
   bool _saving = false;
   String? _initializedFor;
+  String? _lastVehicleKilometrajeSuggestion;
 
   @override
   void dispose() {
@@ -216,7 +217,15 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
                               ? null
                               : (value) {
                                   final vehiculo = _findVehiculoById(vehiculos, value);
-                                  _kilometrajeController.text = vehiculo?.kilometraje?.toString() ?? '';
+                                  final suggestion = vehiculo?.kilometraje?.toString() ?? '';
+                                  final currentValue = _kilometrajeController.text.trim();
+                                  final shouldReplaceKilometraje = currentValue.isEmpty ||
+                                      (_lastVehicleKilometrajeSuggestion != null &&
+                                          currentValue == _lastVehicleKilometrajeSuggestion);
+                                  if (shouldReplaceKilometraje) {
+                                    _kilometrajeController.text = suggestion;
+                                  }
+                                  _lastVehicleKilometrajeSuggestion = suggestion;
                                   ref.read(recepcionFormProvider.notifier).setVehiculo(
                                         value,
                                         kilometrajeSugerido: vehiculo?.kilometraje?.toString(),
@@ -651,6 +660,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
     final cliente = _findClienteById(clientes, draft.clienteId);
     _setClienteFieldText(cliente?.nombreCompleto ?? '');
     _kilometrajeController.text = draft.kilometraje;
+    _lastVehicleKilometrajeSuggestion = draft.kilometraje.isEmpty ? null : draft.kilometraje;
     _trabajoController.text = draft.trabajoARealizar;
     _observacionesController.text = draft.observaciones;
     _initializedFor = seedKey;

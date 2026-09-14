@@ -73,6 +73,25 @@ void main() {
     expect(draft.danosPreexistentes.single.vista, RecepcionVistaVehiculo.frente);
     expect(draft.tieneFirmaCliente, isTrue);
   });
+
+  test('recepcionFormProvider agrega y remueve fotografías pendientes', () {
+    final container = _buildContainer(_RecepcionRepositoryFake([]));
+    addTearDown(container.dispose);
+
+    final notifier = container.read(recepcionFormProvider.notifier);
+    notifier.initialize(null);
+    notifier.addFotografiasPendientes([
+      RecepcionArchivoLocal(
+        id: 'foto-1',
+        nombreArchivo: 'vehiculo.png',
+        bytes: Uint8List.fromList([1, 2, 3]),
+      ),
+    ]);
+    expect(container.read(recepcionFormProvider).fotografiasPendientes, hasLength(1));
+
+    notifier.removeFotografiaPendiente('foto-1');
+    expect(container.read(recepcionFormProvider).fotografiasPendientes, isEmpty);
+  });
 }
 
 ProviderContainer _buildContainer(RecepcionRepository repository) {

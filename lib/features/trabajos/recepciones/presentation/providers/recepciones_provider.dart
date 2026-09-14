@@ -85,10 +85,11 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
   }
 
   void setCliente(String? clienteId) {
+    final shouldClearVehiculo = state.clienteId != clienteId;
     state = state.copyWith(
       clienteId: clienteId,
       clearClienteId: clienteId == null,
-      clearVehiculoId: true,
+      clearVehiculoId: shouldClearVehiculo,
     );
   }
 
@@ -213,14 +214,14 @@ class RecepcionFormNotifier extends AutoDisposeNotifier<RecepcionFormState> {
   void clearFirmaPrestador() {
     state = state.copyWith(
       firmaPrestadorTrazos: const <List<Offset>>[],
-      firmaPrestadorUrl: '',
+      clearFirmaPrestadorUrl: true,
     );
   }
 
   void clearFirmaCliente() {
     state = state.copyWith(
       firmaClienteTrazos: const <List<Offset>>[],
-      firmaClienteUrl: '',
+      clearFirmaClienteUrl: true,
     );
   }
 
@@ -396,7 +397,9 @@ class RecepcionFormState {
     List<List<Offset>>? firmaPrestadorTrazos,
     List<List<Offset>>? firmaClienteTrazos,
     String? firmaPrestadorUrl,
+    bool clearFirmaPrestadorUrl = false,
     String? firmaClienteUrl,
+    bool clearFirmaClienteUrl = false,
     RecepcionEstado? estado,
     DateTime? fechaCreacion,
   }) {
@@ -421,8 +424,8 @@ class RecepcionFormState {
       fotografiasPendientes: fotografiasPendientes ?? this.fotografiasPendientes,
       firmaPrestadorTrazos: firmaPrestadorTrazos ?? this.firmaPrestadorTrazos,
       firmaClienteTrazos: firmaClienteTrazos ?? this.firmaClienteTrazos,
-      firmaPrestadorUrl: firmaPrestadorUrl ?? this.firmaPrestadorUrl,
-      firmaClienteUrl: firmaClienteUrl ?? this.firmaClienteUrl,
+      firmaPrestadorUrl: clearFirmaPrestadorUrl ? null : (firmaPrestadorUrl ?? this.firmaPrestadorUrl),
+      firmaClienteUrl: clearFirmaClienteUrl ? null : (firmaClienteUrl ?? this.firmaClienteUrl),
       estado: estado ?? this.estado,
       fechaCreacion: fechaCreacion ?? this.fechaCreacion,
     );
@@ -437,4 +440,3 @@ class RecepcionFormState {
 DateTime _startOfDay(DateTime date) => DateTime(date.year, date.month, date.day);
 
 DateTime _endOfDay(DateTime date) => DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
-
