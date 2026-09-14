@@ -17,6 +17,9 @@ import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/proformas/presentation/screens/proformas_screen.dart';
 import '../../features/proformas/presentation/screens/proforma_form_screen.dart';
 import '../../features/proformas/presentation/screens/proforma_detail_screen.dart';
+import '../../features/trabajos/recepciones/presentation/screens/recepcion_detail_screen.dart';
+import '../../features/trabajos/recepciones/presentation/screens/recepcion_form_screen.dart';
+import '../../features/trabajos/recepciones/presentation/screens/recepciones_screen.dart';
 import '../../features/trabajos/presentation/screens/trabajos_screen.dart';
 import '../../features/vehiculos/presentation/screens/vehiculo_detail_screen.dart';
 import '../../features/vehiculos/presentation/screens/vehiculo_form_screen.dart';
@@ -105,6 +108,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/trabajos',
             name: 'trabajos',
             builder: (context, state) => const TrabajosScreen(),
+            routes: [
+              GoRoute(
+                path: 'recepciones',
+                name: 'trabajos-recepciones',
+                builder: (context, state) => const RecepcionesScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'nueva',
+                    name: 'trabajos-recepciones-nueva',
+                    builder: (context, state) => const RecepcionFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    name: 'trabajos-recepciones-detalle',
+                    builder: (context, state) =>
+                        RecepcionDetailScreen(recepcionId: state.pathParameters['id']!),
+                  ),
+                  GoRoute(
+                    path: ':id/editar',
+                    name: 'trabajos-recepciones-editar',
+                    builder: (context, state) => RecepcionFormScreen(recepcionId: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
           ),
           GoRoute(
             path: '/contabilidad',
