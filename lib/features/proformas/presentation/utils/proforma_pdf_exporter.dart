@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -55,7 +53,7 @@ class ProformaPdfExporter {
             pw.SizedBox(height: 6),
             pw.Center(
               child: pw.Text(
-                [taller?.direccion, taller?.telefono, taller?.correo].where((item) => item != null && item!.isNotEmpty).join(' · '),
+                [taller?.direccion, taller?.telefono, taller?.correo].where((item) => item != null && item.isNotEmpty).join(' · '),
                 style: const pw.TextStyle(fontSize: 9),
                 textAlign: pw.TextAlign.center,
               ),
@@ -70,7 +68,7 @@ class ProformaPdfExporter {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       _label('CLIENTE'),
-                      pw.Text('${cliente?.nombreCompleto ?? '—'}'),
+                      pw.Text(cliente?.nombreCompleto ?? '—'),
                       pw.SizedBox(height: 4),
                       pw.Text(
                         vehiculo == null

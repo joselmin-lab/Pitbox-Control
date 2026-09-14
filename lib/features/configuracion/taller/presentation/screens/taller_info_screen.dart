@@ -140,6 +140,7 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
                 onPressed: _saving
                     ? null
                     : () async {
+                        final scaffoldMessenger = ScaffoldMessenger.of(context);
                         if (!_formKey.currentState!.validate()) {
                           return;
                         }
@@ -155,14 +156,14 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
                           if (!mounted) {
                             return;
                           }
-                          ScaffoldMessenger.of(this.context).showSnackBar(
+                          scaffoldMessenger.showSnackBar(
                             const SnackBar(content: Text('Datos del taller guardados correctamente.')),
                           );
                         } catch (_) {
                           if (!mounted) {
                             return;
                           }
-                          ScaffoldMessenger.of(this.context).showSnackBar(
+                          scaffoldMessenger.showSnackBar(
                             const SnackBar(content: Text('No se pudo guardar la información del taller.')),
                           );
                         } finally {
@@ -229,14 +230,14 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Logo actualizado correctamente.')),
       );
     } catch (_) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo subir el logo del taller.')),
       );
     } finally {

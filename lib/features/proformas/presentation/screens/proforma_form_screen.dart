@@ -283,7 +283,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
                 key: ValueKey('${_selectedClienteId ?? ''}-${_selectedVehiculoId ?? ''}'),
-                value: vehiculosDelCliente.any((item) => item.id == _selectedVehiculoId) ? _selectedVehiculoId : null,
+                initialValue: vehiculosDelCliente.any((item) => item.id == _selectedVehiculoId) ? _selectedVehiculoId : null,
                 decoration: const InputDecoration(labelText: 'Vehículo *'),
                 items: [
                   for (final vehiculo in vehiculosDelCliente)
@@ -734,7 +734,7 @@ class _ProformaFormScreenState extends ConsumerState<ProformaFormScreen> {
   }
 }
 
-class _CatalogAddField<T> extends StatelessWidget {
+class _CatalogAddField<T extends Object> extends StatelessWidget {
   const _CatalogAddField({
     required this.label,
     required this.controller,
