@@ -1,6 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -324,12 +322,6 @@ class RecepcionFormState {
   final RecepcionEstado estado;
   final DateTime fechaCreacion;
 
-  bool get tieneFirmaPrestador =>
-      firmaPrestadorTrazos.any((stroke) => stroke.isNotEmpty) || (firmaPrestadorUrl?.trim().isNotEmpty ?? false);
-
-  bool get tieneFirmaCliente =>
-      firmaClienteTrazos.any((stroke) => stroke.isNotEmpty) || (firmaClienteUrl?.trim().isNotEmpty ?? false);
-
   factory RecepcionFormState.initial() {
     return RecepcionFormState(
       numero: '',
@@ -378,6 +370,12 @@ class RecepcionFormState {
       fechaCreacion: recepcion.fechaCreacion,
     );
   }
+
+  bool get tieneFirmaPrestador =>
+      firmaPrestadorTrazos.any((stroke) => stroke.isNotEmpty) || (firmaPrestadorUrl?.trim().isNotEmpty ?? false);
+
+  bool get tieneFirmaCliente =>
+      firmaClienteTrazos.any((stroke) => stroke.isNotEmpty) || (firmaClienteUrl?.trim().isNotEmpty ?? false);
 
   RecepcionVehiculo toRecepcion({
     required List<String> fotografias,
