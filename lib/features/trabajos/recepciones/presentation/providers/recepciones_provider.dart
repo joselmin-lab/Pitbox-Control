@@ -299,29 +299,6 @@ class RecepcionFormState {
     required this.fechaCreacion,
   });
 
-  final String? recepcionId;
-  final String numero;
-  final String? clienteId;
-  final String? vehiculoId;
-  final DateTime fechaIngreso;
-  final DateTime? fechaSalidaEstimada;
-  final String kilometraje;
-  final bool ingresoEnGrua;
-  final String trabajoARealizar;
-  final String observaciones;
-  final List<RecepcionChecklistItem> checklistSistemas;
-  final List<RecepcionInventarioItem> inventario;
-  final double nivelCombustible;
-  final List<DanoVehiculoMarcado> danosPreexistentes;
-  final List<String> fotografiasExistentes;
-  final List<RecepcionArchivoLocal> fotografiasPendientes;
-  final List<List<Offset>> firmaPrestadorTrazos;
-  final List<List<Offset>> firmaClienteTrazos;
-  final String? firmaPrestadorUrl;
-  final String? firmaClienteUrl;
-  final RecepcionEstado estado;
-  final DateTime fechaCreacion;
-
   factory RecepcionFormState.initial() {
     return RecepcionFormState(
       numero: '',
@@ -370,6 +347,29 @@ class RecepcionFormState {
       fechaCreacion: recepcion.fechaCreacion,
     );
   }
+
+  final String? recepcionId;
+  final String numero;
+  final String? clienteId;
+  final String? vehiculoId;
+  final DateTime fechaIngreso;
+  final DateTime? fechaSalidaEstimada;
+  final String kilometraje;
+  final bool ingresoEnGrua;
+  final String trabajoARealizar;
+  final String observaciones;
+  final List<RecepcionChecklistItem> checklistSistemas;
+  final List<RecepcionInventarioItem> inventario;
+  final double nivelCombustible;
+  final List<DanoVehiculoMarcado> danosPreexistentes;
+  final List<String> fotografiasExistentes;
+  final List<RecepcionArchivoLocal> fotografiasPendientes;
+  final List<List<Offset>> firmaPrestadorTrazos;
+  final List<List<Offset>> firmaClienteTrazos;
+  final String? firmaPrestadorUrl;
+  final String? firmaClienteUrl;
+  final RecepcionEstado estado;
+  final DateTime fechaCreacion;
 
   bool get tieneFirmaPrestador =>
       firmaPrestadorTrazos.any((stroke) => stroke.isNotEmpty) || (firmaPrestadorUrl?.trim().isNotEmpty ?? false);
