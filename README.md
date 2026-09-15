@@ -171,7 +171,7 @@ Las tablas `clientes`, `vehiculos`, `servicios`, `paquetes_servicios`, `paquete_
    - Nombre: `recepciones-firmas`
    - Activar **Public bucket**
    - Guardar
-14. (Opcional recomendado) Revisa `supabase/storage_taller_logo.sql` para políticas SQL del bucket `taller-logos`.
+14. Ejecuta `supabase/storage_taller_logo.sql` en **SQL Editor** para crear/actualizar las políticas de Storage del bucket `taller-logos` (lectura pública y permisos de inserción para la app).
 
 > El script SQL se ejecuta manualmente desde Supabase (no desde esta app).
 
