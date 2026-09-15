@@ -70,7 +70,14 @@ class SupabaseTallerRepository implements TallerRepository {
         throw const FormatException('La extensión del archivo no coincide con su formato real.');
       }
       final randomSuffix = _random.nextInt(1000000).toString().padLeft(6, '0');
-      final objectPath = 'logo_${DateTime.now().microsecondsSinceEpoch}_${randomSuffix}_$sanitizedName';
+      // Nota: se evita el uso de guiones bajos ("_") en el nombre del objeto.
+      // Supabase Storage tiene un bug conocido en el trigger de validación de
+      // prefijos que, al usar LIKE con guiones bajos sin un ESCAPE explícito,
+      // provoca el error de Postgres 22025 (invalid_escape_sequence) al
+      // insertar filas en storage.objects. Usar guiones ("-") como separador
+      // evita ese problema por completo.
+      final objectPath =
+          'logo-${DateTime.now().microsecondsSinceEpoch}-$randomSuffix-$sanitizedName';
 
       await _client.storage.from(_bucket).uploadBinary(
             objectPath,
@@ -133,9 +140,19 @@ class SupabaseTallerRepository implements TallerRepository {
     throw const FormatException('fecha_actualizacion inválida en taller_info');
   }
 
+  /// Sanitiza el nombre de archivo para usarlo como parte del `objectPath`
+  /// en Supabase Storage.
+  ///
+  /// Importante: los caracteres no permitidos se reemplazan por guiones
+  /// ("-") y NO por guiones bajos ("_"). Un bug conocido en el trigger de
+  /// validación de prefijos de Supabase Storage provoca el error de
+  /// Postgres 22025 (invalid_escape_sequence) cuando el nombre del objeto
+  /// contiene guiones bajos, por lo que deben evitarse por completo.
   String _sanitizeFileName(String value) {
     final trimmed = value.trim().toLowerCase();
-    final sanitized = trimmed.replaceAll(RegExp(r'[^a-z0-9._-]'), '_');
+    var sanitized = trimmed.replaceAll(RegExp(r'[^a-z0-9.-]'), '-');
+    // Colapsa guiones repetidos que pudieran resultar del reemplazo anterior.
+    sanitized = sanitized.replaceAll(RegExp(r'-{2,}'), '-');
     return sanitized.isEmpty ? 'logo.png' : sanitized;
   }
 
