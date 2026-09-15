@@ -82,7 +82,12 @@ class SupabaseTallerRepository implements TallerRepository {
 
       return _client.storage.from(_bucket).getPublicUrl(objectPath);
     } on StorageException catch (error) {
-      throw StateError('No se pudo subir el logo: ${error.message}');
+      final status = error.statusCode == null ? '' : ' [${error.statusCode}]';
+      final code = (error.error ?? '').trim();
+      final codeSuffix = code.isEmpty ? '' : ' ($code)';
+      throw StateError(
+        'No se pudo subir el logo al bucket "$_bucket"$status$codeSuffix: ${error.message}',
+      );
     } on FormatException catch (error) {
       throw StateError(error.message);
     }

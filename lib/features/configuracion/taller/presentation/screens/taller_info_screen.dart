@@ -233,12 +233,18 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Logo actualizado correctamente.')),
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('Error al subir logo del taller: $error');
+      debugPrintStack(stackTrace: stackTrace);
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo subir el logo del taller.')),
+        SnackBar(
+          content: Text(
+            'No se pudo subir el logo del taller. ${error is StateError ? error.message : ''}'.trim(),
+          ),
+        ),
       );
     } finally {
       if (mounted) {

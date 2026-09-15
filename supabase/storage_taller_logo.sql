@@ -1,50 +1,39 @@
--- No se crea bucket por SQL estándar en este flujo.
--- Crea el bucket manualmente desde Supabase Dashboard:
--- 1) Storage -> New bucket
--- 2) Nombre: taller-logos
--- 3) Activar "Public bucket"
--- 4) Guardar
+-- 1) Crea manualmente el bucket en Supabase Dashboard:
+--    Storage -> New bucket -> Nombre: taller-logos -> Public bucket
 --
--- Este bucket público se usa para almacenar logos del taller y exponer URL pública.
---
--- Políticas SQL opcionales para Storage (ejecutar en SQL Editor):
--- Recomendación: lectura pública + escritura autenticada y acotada por ruta.
--- Si estás en una fase sin auth, evalúa temporalmente políticas más permisivas.
---
--- drop policy if exists "Permitir lectura publica logos taller" on storage.objects;
--- drop policy if exists "Permitir insercion publica logos taller" on storage.objects;
--- drop policy if exists "Permitir actualizacion publica logos taller" on storage.objects;
--- drop policy if exists "Permitir eliminacion publica logos taller" on storage.objects;
---
--- create policy "Permitir lectura publica logos taller"
--- on storage.objects for select
--- using (bucket_id = 'taller-logos');
---
--- create policy "Permitir insercion publica logos taller"
--- on storage.objects for insert
--- with check (
---   bucket_id = 'taller-logos'
---   and auth.role() = 'authenticated'
---   and name like 'logo\\_%' escape '\\'
--- );
---
--- create policy "Permitir actualizacion publica logos taller"
--- on storage.objects for update
--- using (
---   bucket_id = 'taller-logos'
---   and auth.role() = 'authenticated'
---   and name like 'logo\\_%' escape '\\'
--- )
--- with check (
---   bucket_id = 'taller-logos'
---   and auth.role() = 'authenticated'
---   and name like 'logo\\_%' escape '\\'
--- );
---
--- create policy "Permitir eliminacion publica logos taller"
--- on storage.objects for delete
--- using (
---   bucket_id = 'taller-logos'
---   and auth.role() = 'authenticated'
---   and name like 'logo\\_%' escape '\\'
--- );
+-- 2) Ejecuta este script en SQL Editor para permitir subir logos desde la app web.
+--    Incluye lectura pública e inserción/actualización/eliminación para roles anon y authenticated.
+
+drop policy if exists "Permitir lectura publica logos taller" on storage.objects;
+drop policy if exists "Permitir insercion logos taller app" on storage.objects;
+drop policy if exists "Permitir actualizacion logos taller app" on storage.objects;
+drop policy if exists "Permitir eliminacion logos taller app" on storage.objects;
+
+create policy "Permitir lectura publica logos taller"
+on storage.objects for select
+using (bucket_id = 'taller-logos');
+
+create policy "Permitir insercion logos taller app"
+on storage.objects for insert to anon, authenticated
+with check (
+  bucket_id = 'taller-logos'
+  and name like 'logo\\_%' escape '\\'
+);
+
+create policy "Permitir actualizacion logos taller app"
+on storage.objects for update to anon, authenticated
+using (
+  bucket_id = 'taller-logos'
+  and name like 'logo\\_%' escape '\\'
+)
+with check (
+  bucket_id = 'taller-logos'
+  and name like 'logo\\_%' escape '\\'
+);
+
+create policy "Permitir eliminacion logos taller app"
+on storage.objects for delete to anon, authenticated
+using (
+  bucket_id = 'taller-logos'
+  and name like 'logo\\_%' escape '\\'
+);
