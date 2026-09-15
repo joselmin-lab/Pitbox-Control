@@ -32,6 +32,19 @@ void main() {
     expect(detectLogoImageType(Uint8List.fromList(bytes)), isNull);
   });
 
+  test('rechaza archivos vacíos antes de intentar subirlos', () {
+    expect(
+      () => validateImageBytesNotEmpty(Uint8List(0)),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          emptyImageUploadErrorMessage,
+        ),
+      ),
+    );
+  });
+
   test('valida coincidencia entre extensión y tipo detectado', () {
     expect(doesLogoExtensionMatchType('png', LogoImageType.png), isTrue);
     expect(doesLogoExtensionMatchType('png', LogoImageType.webp), isFalse);

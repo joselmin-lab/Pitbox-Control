@@ -203,7 +203,7 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
     final bytes = file.bytes;
     if (bytes == null || bytes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo leer el archivo seleccionado.')),
+        const SnackBar(content: Text('El archivo seleccionado está vacío, por favor elige otra imagen.')),
       );
       return;
     }
@@ -239,11 +239,12 @@ class _TallerInfoScreenState extends ConsumerState<TallerInfoScreen> {
       if (!mounted) {
         return;
       }
+      final message = error is StateError
+          ? error.message
+          : 'No se pudo subir el logo del taller. Intenta seleccionar la imagen nuevamente.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'No se pudo subir el logo del taller. ${error is StateError ? error.message : ''}'.trim(),
-          ),
+          content: Text(message),
         ),
       );
     } finally {

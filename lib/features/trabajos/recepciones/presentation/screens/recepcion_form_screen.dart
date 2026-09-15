@@ -15,6 +15,7 @@ import '../../../../clientes/domain/models/cliente.dart';
 import '../../../../clientes/presentation/providers/clientes_provider.dart';
 import '../../../../vehiculos/domain/models/vehiculo.dart';
 import '../../../../vehiculos/presentation/providers/vehiculos_provider.dart';
+import '../../../../configuracion/taller/domain/utils/logo_image_validator.dart';
 import '../../domain/models/recepcion_vehiculo.dart';
 import '../providers/recepciones_provider.dart';
 import '../widgets/damage_diagram.dart';
@@ -734,8 +735,14 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
       if (!mounted) {
         return;
       }
+      final rawMessage = error is StateError ? error.message : error.toString();
+      final message = rawMessage == emptyImageUploadErrorMessage ||
+              rawMessage == 'Solo se permiten imágenes PNG, JPG/JPEG o WEBP.' ||
+              rawMessage == 'La extensión del archivo no coincide con su formato real.'
+          ? 'No se pudo guardar la recepción: uno de los archivos está vacío o no es válido. Intenta seleccionarlo nuevamente.'
+          : 'No se pudo guardar la recepción: $rawMessage';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo guardar la recepción: $error')),
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) {

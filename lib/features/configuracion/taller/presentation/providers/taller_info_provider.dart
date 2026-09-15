@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/taller_info.dart';
 import '../../domain/repositories/taller_repository.dart';
+import '../../domain/utils/logo_image_validator.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 
 final tallerInfoProvider = AsyncNotifierProvider<TallerInfoNotifier, TallerInfo>(() {
@@ -63,17 +64,33 @@ class TallerInfoNotifier extends AsyncNotifier<TallerInfo> {
   }
 
   Future<void> _actualizarLogoInternal(Uint8List bytes, String nombreArchivo) async {
+    if (bytes.isEmpty) {
+      throw StateError(
+        'No se pudo subir el logo del taller: el archivo está vacío o no es válido. Intenta seleccionar la imagen nuevamente.',
+      );
+    }
     final current = state.valueOrNull ?? await future;
     final previousLogoUrl = current.logoUrl?.trim();
-    final logoUrl = await _repository.subirLogo(bytes, nombreArchivo);
     try {
-      final saved = await _repository.guardarInfo(current.copyWith(logoUrl: logoUrl));
-      state = AsyncData(saved);
-      if (previousLogoUrl != null && previousLogoUrl.isNotEmpty && previousLogoUrl != logoUrl) {
-        await _repository.eliminarLogoPorUrl(previousLogoUrl);
+      final logoUrl = await _repository.subirLogo(bytes, nombreArchivo);
+      try {
+        final saved = await _repository.guardarInfo(current.copyWith(logoUrl: logoUrl));
+        state = AsyncData(saved);
+        if (previousLogoUrl != null && previousLogoUrl.isNotEmpty && previousLogoUrl != logoUrl) {
+          await _repository.eliminarLogoPorUrl(previousLogoUrl);
+        }
+      } catch (_) {
+        await _repository.eliminarLogoPorUrl(logoUrl);
+        rethrow;
       }
-    } catch (_) {
-      await _repository.eliminarLogoPorUrl(logoUrl);
+    } on StateError catch (error) {
+      if (error.message == emptyImageUploadErrorMessage ||
+          error.message == 'Solo se permiten imágenes PNG, JPG/JPEG o WEBP.' ||
+          error.message == 'La extensión del archivo no coincide con su formato real.') {
+        throw StateError(
+          'No se pudo subir el logo del taller: el archivo está vacío o no es válido. Intenta seleccionar la imagen nuevamente.',
+        );
+      }
       rethrow;
     }
   }
