@@ -120,41 +120,6 @@ class _SignaturePainter extends CustomPainter {
       if (stroke.isEmpty) {
         continue;
       }
-
-      class SignatureThumbnail extends StatelessWidget {
-        const SignatureThumbnail({
-          required this.trazos,
-          this.height = 110,
-          super.key,
-        });
-
-        final List<List<Offset>> trazos;
-        final double height;
-
-        @override
-        Widget build(BuildContext context) {
-          return Container(
-            height: height,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
-            child: CustomPaint(
-              painter: _SignaturePainter(trazos),
-              child: trazos.any((stroke) => stroke.isNotEmpty)
-                  ? const SizedBox.expand()
-                  : Center(
-                      child: Text(
-                        'Sin firma',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-            ),
-          );
-        }
-      }
       if (stroke.length == 1) {
         canvas.drawPoints(ui.PointMode.points, stroke, paint);
         continue;
@@ -170,5 +135,40 @@ class _SignaturePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SignaturePainter oldDelegate) {
     return oldDelegate.trazos != trazos;
+  }
+}
+
+class SignatureThumbnail extends StatelessWidget {
+  const SignatureThumbnail({
+    required this.trazos,
+    this.height = 110,
+    super.key,
+  });
+
+  final List<List<Offset>> trazos;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: CustomPaint(
+        painter: _SignaturePainter(trazos),
+        child: trazos.any((stroke) => stroke.isNotEmpty)
+            ? const SizedBox.expand()
+            : Center(
+                child: Text(
+                  'Sin firma',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+      ),
+    );
   }
 }
