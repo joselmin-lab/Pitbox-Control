@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../domain/models/recepcion_vehiculo.dart';
+import 'vehicle_damage_silhouettes.dart';
 
 class DamageDiagram extends StatelessWidget {
   const DamageDiagram({
@@ -72,7 +74,7 @@ class DamageDiagram extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              const height = 140.0;
+              const height = 160.0;
               final content = SizedBox(
                 width: width,
                 height: height,
@@ -86,25 +88,12 @@ class DamageDiagram extends StatelessWidget {
                         border: Border.all(color: AppColors.border),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Transform.rotate(
-                            angle: _rotationForView(vista),
-                            child: const Icon(
-                              Icons.directions_car_filled_rounded,
-                              size: 54,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            vista.label,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: SvgPicture.asset(
+                          vehicleDamageSilhouetteAssetFor(vista),
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                     for (final punto in puntos)
@@ -151,16 +140,4 @@ class DamageDiagram extends StatelessWidget {
     );
   }
 
-  double _rotationForView(RecepcionVistaVehiculo value) {
-    switch (value) {
-      case RecepcionVistaVehiculo.derecho:
-        return 1.5708;
-      case RecepcionVistaVehiculo.frente:
-        return 0;
-      case RecepcionVistaVehiculo.detras:
-        return 3.14159;
-      case RecepcionVistaVehiculo.izquierdo:
-        return -1.5708;
-    }
-  }
 }

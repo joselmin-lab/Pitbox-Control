@@ -7,6 +7,7 @@ import '../../../../clientes/domain/models/cliente.dart';
 import '../../../../configuracion/taller/domain/models/taller_info.dart';
 import '../../../../vehiculos/domain/models/vehiculo.dart';
 import '../../domain/models/recepcion_vehiculo.dart';
+import '../widgets/vehicle_damage_silhouettes.dart';
 
 class RecepcionPdfExporter {
   const RecepcionPdfExporter._();
@@ -39,6 +40,7 @@ class RecepcionPdfExporter {
     final fotos = await Future.wait(
       recepcion.fotografias.take(4).map(_loadImage),
     );
+    final danosSvgs = await loadVehicleDamageSilhouettesSvg();
 
     pdf.addPage(
       pw.MultiPage(
@@ -196,6 +198,7 @@ class RecepcionPdfExporter {
                 for (final vista in RecepcionVistaVehiculo.values)
                   _damageBox(
                     vista.label,
+                    danosSvgs[vista] ?? '',
                     recepcion.danosPreexistentes.where((item) => item.vista == vista).toList(growable: false),
                   ),
               ],
@@ -282,7 +285,7 @@ class RecepcionPdfExporter {
     );
   }
 
-  static pw.Widget _damageBox(String title, List<DanoVehiculoMarcado> puntos) {
+  static pw.Widget _damageBox(String title, String svg, List<DanoVehiculoMarcado> puntos) {
     const width = 120.0;
     const height = 90.0;
     return pw.Container(
@@ -301,11 +304,19 @@ class RecepcionPdfExporter {
             child: pw.Stack(
               children: [
                 pw.Center(
-                  child: pw.Text(
-                    title,
-                    style: pw.TextStyle(color: PdfColors.grey600, fontSize: 8),
-                    textAlign: pw.TextAlign.center,
-                  ),
+                  child: svg.trim().isEmpty
+                      ? pw.Text(
+                          title,
+                          style: pw.TextStyle(color: PdfColors.grey600, fontSize: 8),
+                          textAlign: pw.TextAlign.center,
+                        )
+                      : pw.Padding(
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.SvgImage(
+                            svg: svg,
+                            fit: pw.BoxFit.contain,
+                          ),
+                        ),
                 ),
                 for (final punto in puntos)
                   pw.Positioned(

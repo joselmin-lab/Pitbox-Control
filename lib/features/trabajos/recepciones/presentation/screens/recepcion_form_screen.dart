@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,9 +36,6 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
   final _kilometrajeController = TextEditingController();
   final _trabajoController = TextEditingController();
   final _observacionesController = TextEditingController();
-  final _firmaPrestadorKey = GlobalKey();
-  final _firmaClienteKey = GlobalKey();
-
   bool _saving = false;
   String? _initializedFor;
   String? _lastVehicleKilometrajeSuggestion;
@@ -551,73 +547,39 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
                         bottomRight: Radius.circular(12),
                       ),
                     ),
-                    child: Wrap(
-                      spacing: AppSpacing.lg,
-                      runSpacing: AppSpacing.md,
+                    child: Column(
                       children: [
-                        SizedBox(
-                          width: 340,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (draft.firmaPrestadorUrl?.trim().isNotEmpty == true &&
-                                  !draft.firmaPrestadorTrazos.any((stroke) => stroke.isNotEmpty)) ...[
-                                Text(
-                                  'Ya existe una firma del prestador guardada. Puedes volver a firmar para reemplazarla.',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                              ],
-                              SignaturePad(
-                                title: 'Firma del prestador del servicio',
-                                helperText: 'Dibuja la firma con mouse o dedo.',
-                                trazos: draft.firmaPrestadorTrazos,
-                                onChanged: (value) => ref.read(recepcionFormProvider.notifier).setFirmaPrestador(value),
-                                repaintBoundaryKey: _firmaPrestadorKey,
-                                enabled: !_saving,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              OutlinedButton.icon(
-                                onPressed: _saving
-                                    ? null
-                                    : () => ref.read(recepcionFormProvider.notifier).clearFirmaPrestador(),
-                                icon: const Icon(Icons.restart_alt_rounded),
-                                label: const Text('Limpiar firma'),
-                              ),
-                            ],
-                          ),
+                        _SignatureCaptureCard(
+                          title: 'Firma del prestador del servicio',
+                          helperText: 'Captura la firma en una ventana amplia.',
+                          hasRemoteSignature: draft.firmaPrestadorUrl?.trim().isNotEmpty == true,
+                          remoteSignatureUrl: draft.firmaPrestadorUrl,
+                          trazos: draft.firmaPrestadorTrazos,
+                          onTapSign: _saving
+                              ? null
+                              : () => _capturarFirma(
+                                    title: 'Firma del prestador del servicio',
+                                    helperText: 'Dibuja la firma con mouse o dedo.',
+                                    initialTrazos: draft.firmaPrestadorTrazos,
+                                    onSave: (value) =>
+                                        ref.read(recepcionFormProvider.notifier).setFirmaPrestador(value),
+                                  ),
                         ),
-                        SizedBox(
-                          width: 340,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (draft.firmaClienteUrl?.trim().isNotEmpty == true &&
-                                  !draft.firmaClienteTrazos.any((stroke) => stroke.isNotEmpty)) ...[
-                                Text(
-                                  'Ya existe una firma del cliente guardada. Puedes volver a firmar para reemplazarla.',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                              ],
-                              SignaturePad(
-                                title: 'Firma del cliente',
-                                helperText: 'Firma digital capturada directamente en la pantalla.',
-                                trazos: draft.firmaClienteTrazos,
-                                onChanged: (value) => ref.read(recepcionFormProvider.notifier).setFirmaCliente(value),
-                                repaintBoundaryKey: _firmaClienteKey,
-                                enabled: !_saving,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              OutlinedButton.icon(
-                                onPressed: _saving
-                                    ? null
-                                    : () => ref.read(recepcionFormProvider.notifier).clearFirmaCliente(),
-                                icon: const Icon(Icons.restart_alt_rounded),
-                                label: const Text('Limpiar firma'),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: AppSpacing.md),
+                        _SignatureCaptureCard(
+                          title: 'Firma del cliente',
+                          helperText: 'Captura la firma en una ventana amplia.',
+                          hasRemoteSignature: draft.firmaClienteUrl?.trim().isNotEmpty == true,
+                          remoteSignatureUrl: draft.firmaClienteUrl,
+                          trazos: draft.firmaClienteTrazos,
+                          onTapSign: _saving
+                              ? null
+                              : () => _capturarFirma(
+                                    title: 'Firma del cliente',
+                                    helperText: 'Firma digital capturada directamente en la pantalla.',
+                                    initialTrazos: draft.firmaClienteTrazos,
+                                    onSave: (value) => ref.read(recepcionFormProvider.notifier).setFirmaCliente(value),
+                                  ),
                         ),
                       ],
                     ),
@@ -730,7 +692,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
 
       var firmaPrestadorUrl = draft.firmaPrestadorUrl;
       if (draft.firmaPrestadorTrazos.any((stroke) => stroke.isNotEmpty)) {
-        final bytes = await _captureSignature(_firmaPrestadorKey);
+        final bytes = await _renderSignatureBytes(draft.firmaPrestadorTrazos);
         if (bytes == null || bytes.isEmpty) {
           throw StateError('No se pudo generar la firma del prestador.');
         }
@@ -742,7 +704,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
 
       var firmaClienteUrl = draft.firmaClienteUrl;
       if (draft.firmaClienteTrazos.any((stroke) => stroke.isNotEmpty)) {
-        final bytes = await _captureSignature(_firmaClienteKey);
+        final bytes = await _renderSignatureBytes(draft.firmaClienteTrazos);
         if (bytes == null || bytes.isEmpty) {
           throw StateError('No se pudo generar la firma del cliente.');
         }
@@ -782,14 +744,133 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
     }
   }
 
-  Future<Uint8List?> _captureSignature(GlobalKey key) async {
-    final boundary = key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) {
+  Future<void> _capturarFirma({
+    required String title,
+    required String helperText,
+    required List<List<Offset>> initialTrazos,
+    required ValueChanged<List<List<Offset>>> onSave,
+  }) async {
+    final dialogSize = MediaQuery.sizeOf(context);
+    final trazosIniciales = initialTrazos.map((stroke) => stroke.toList(growable: true)).toList(growable: true);
+    final result = await showDialog<List<List<Offset>>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        var currentTrazos = trazosIniciales;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(AppSpacing.md),
+              child: SizedBox(
+                width: dialogSize.width * 0.92,
+                height: dialogSize.height * 0.86,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      Expanded(
+                        child: SignaturePad(
+                          title: 'Área de firma',
+                          helperText: helperText,
+                          trazos: currentTrazos,
+                          onChanged: (value) => setDialogState(() => currentTrazos = value),
+                          repaintBoundaryKey: GlobalKey(),
+                          canvasHeight: dialogSize.height * 0.52,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancelar'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: () => setDialogState(() => currentTrazos = <List<Offset>>[]),
+                            icon: const Icon(Icons.restart_alt_rounded),
+                            label: const Text('Limpiar'),
+                          ),
+                          FilledButton.icon(
+                            onPressed: currentTrazos.any((stroke) => stroke.isNotEmpty)
+                                ? () => Navigator.of(context).pop(
+                                      currentTrazos
+                                          .map((stroke) => stroke.toList(growable: false))
+                                          .toList(growable: false),
+                                    )
+                                : null,
+                            icon: const Icon(Icons.check_rounded),
+                            label: const Text('Guardar firma'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (result != null) {
+      onSave(result);
+    }
+  }
+
+  Future<Uint8List?> _renderSignatureBytes(List<List<Offset>> trazos) async {
+    final nonEmptyStrokes = trazos.where((stroke) => stroke.isNotEmpty).toList(growable: false);
+    if (nonEmptyStrokes.isEmpty) {
       return null;
     }
+    const width = 1200.0;
+    const height = 480.0;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, width, height));
+    final backgroundPaint = Paint()..color = Colors.white;
+    canvas.drawRect(const Rect.fromLTWH(0, 0, width, height), backgroundPaint);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.5
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.black87;
+
+    double maxX = 0;
+    double maxY = 0;
+    for (final stroke in nonEmptyStrokes) {
+      for (final point in stroke) {
+        if (point.dx > maxX) {
+          maxX = point.dx;
+        }
+        if (point.dy > maxY) {
+          maxY = point.dy;
+        }
+      }
+    }
+    final scaleX = maxX <= 0 ? 1.0 : (width - 40) / maxX;
+    final scaleY = maxY <= 0 ? 1.0 : (height - 40) / maxY;
+    final scale = scaleX < scaleY ? scaleX : scaleY;
+    canvas.translate(20, 20);
+    canvas.scale(scale.isFinite && scale > 0 ? scale : 1.0);
+    for (final stroke in nonEmptyStrokes) {
+      if (stroke.length == 1) {
+        canvas.drawPoints(ui.PointMode.points, stroke, paint);
+        continue;
+      }
+      final path = Path()..moveTo(stroke.first.dx, stroke.first.dy);
+      for (var index = 1; index < stroke.length; index++) {
+        path.lineTo(stroke[index].dx, stroke[index].dy);
+      }
+      canvas.drawPath(path, paint);
+    }
+    final picture = recorder.endRecording();
     ui.Image? image;
     try {
-      image = await boundary.toImage(pixelRatio: 2);
+      image = await picture.toImage(width.toInt(), height.toInt());
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
       return bytes?.buffer.asUint8List();
     } finally {
@@ -891,6 +972,77 @@ class _SectionBand extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _SignatureCaptureCard extends StatelessWidget {
+  const _SignatureCaptureCard({
+    required this.title,
+    required this.helperText,
+    required this.hasRemoteSignature,
+    required this.remoteSignatureUrl,
+    required this.trazos,
+    required this.onTapSign,
+  });
+
+  final String title;
+  final String helperText;
+  final bool hasRemoteSignature;
+  final String? remoteSignatureUrl;
+  final List<List<Offset>> trazos;
+  final VoidCallback? onTapSign;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLocalSignature = trazos.any((stroke) => stroke.isNotEmpty);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: AppSpacing.xs),
+          Text(helperText, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: AppSpacing.sm),
+          if (hasLocalSignature)
+            SignatureThumbnail(trazos: trazos)
+          else if (hasRemoteSignature && remoteSignatureUrl != null && remoteSignatureUrl!.trim().isNotEmpty)
+            Container(
+              height: 110,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Theme.of(context).dividerColor),
+              ),
+              alignment: Alignment.center,
+              child: Image.network(
+                remoteSignatureUrl!,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Text('Firma guardada'),
+              ),
+            )
+          else
+            const SignatureThumbnail(trazos: <List<Offset>>[]),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            hasLocalSignature || hasRemoteSignature ? 'Estado: firma capturada.' : 'Estado: pendiente de firma.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          FilledButton.icon(
+            onPressed: onTapSign,
+            icon: const Icon(Icons.draw_rounded),
+            label: Text(hasLocalSignature || hasRemoteSignature ? 'Volver a firmar' : 'Firmar'),
+          ),
+        ],
       ),
     );
   }
