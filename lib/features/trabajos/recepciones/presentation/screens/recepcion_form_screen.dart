@@ -551,7 +551,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
                       children: [
                         _SignatureCaptureCard(
                           title: 'Firma del prestador del servicio',
-                          helperText: 'Captura la firma en una ventana amplia.',
+                          helperText: 'Captura esta firma en una ventana amplia. Se firma una a la vez.',
                           hasRemoteSignature: draft.firmaPrestadorUrl?.trim().isNotEmpty == true,
                           remoteSignatureUrl: draft.firmaPrestadorUrl,
                           trazos: draft.firmaPrestadorTrazos,
@@ -568,7 +568,7 @@ class _RecepcionFormScreenState extends ConsumerState<RecepcionFormScreen> {
                         const SizedBox(height: AppSpacing.md),
                         _SignatureCaptureCard(
                           title: 'Firma del cliente',
-                          helperText: 'Captura la firma en una ventana amplia.',
+                          helperText: 'Captura esta firma en una ventana amplia. Se firma una a la vez.',
                           hasRemoteSignature: draft.firmaClienteUrl?.trim().isNotEmpty == true,
                           remoteSignatureUrl: draft.firmaClienteUrl,
                           trazos: draft.firmaClienteTrazos,
