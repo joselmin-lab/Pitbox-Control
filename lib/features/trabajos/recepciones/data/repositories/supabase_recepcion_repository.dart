@@ -141,6 +141,7 @@ class SupabaseRecepcionRepository implements RecepcionRepository {
     required String prefijo,
   }) async {
     try {
+      validateImageBytesNotEmpty(bytes);
       final sanitizedName = _sanitizeFileName(nombreArchivo);
       final imageType = detectLogoImageType(bytes);
       if (imageType == null) {
@@ -150,7 +151,7 @@ class SupabaseRecepcionRepository implements RecepcionRepository {
       if (extension == null || !doesLogoExtensionMatchType(extension, imageType)) {
         throw const FormatException('La extensión del archivo no coincide con su formato real.');
       }
-      final randomSuffix = _random.nextInt(1 << 32).toRadixString(16);
+      final randomSuffix = _random.nextInt(1000000).toString().padLeft(6, '0');
       final objectPath = '${prefijo}_${DateTime.now().microsecondsSinceEpoch}_${randomSuffix}_$sanitizedName';
       await _client.storage.from(bucket).uploadBinary(
             objectPath,

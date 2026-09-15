@@ -110,6 +110,31 @@ void main() {
     expect(repository.lastDeletedLogoUrl, isNull);
   });
 
+  test('actualizarLogo rechaza archivos vacíos antes de subirlos', () async {
+    final repository = _TallerRepositoryFake(TallerInfo.vacio());
+    final container = _buildContainer(repository);
+    addTearDown(container.dispose);
+
+    await container.read(tallerInfoProvider.future);
+
+    await expectLater(
+      container.read(tallerInfoProvider.notifier).actualizarLogo(
+            Uint8List(0),
+            'logo.png',
+          ),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'No se pudo subir el logo del taller: el archivo está vacío o no es válido. Intenta seleccionar la imagen nuevamente.',
+        ),
+      ),
+    );
+
+    expect(repository.calls, isEmpty);
+    expect(repository.lastUploadFileName, isNull);
+  });
+
   test('actualizarLogo propaga error si falla guardarInfo sin alterar estado', () async {
     final repository = _TallerRepositoryFake(TallerInfo.vacio(), failOnSave: true);
     final container = _buildContainer(repository);

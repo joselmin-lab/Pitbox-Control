@@ -2,6 +2,9 @@ import 'dart:typed_data';
 
 enum LogoImageType { png, jpeg, webp }
 
+const emptyImageUploadErrorMessage =
+    'El archivo de imagen seleccionado está vacío o no se pudo leer correctamente.';
+
 extension LogoImageTypeX on LogoImageType {
   String get contentType {
     switch (this) {
@@ -30,6 +33,12 @@ String? extractLogoExtension(String fileName) {
     return null;
   }
   return fileName.substring(dotIndex + 1).toLowerCase();
+}
+
+void validateImageBytesNotEmpty(Uint8List bytes) {
+  if (bytes.isEmpty) {
+    throw const FormatException(emptyImageUploadErrorMessage);
+  }
 }
 
 LogoImageType? detectLogoImageType(Uint8List bytes) {
